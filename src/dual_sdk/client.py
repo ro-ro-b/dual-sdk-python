@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from dual_sdk._transport import AsyncTransport, Transport
+from dual_sdk._transport import AsyncTransport, AuthMode, Transport
 from dual_sdk.resources import (
     ApiKeys,
     AsyncApiKeys,
@@ -50,18 +50,17 @@ class DualClient:
 
         # Get current wallet
         wallet = client.wallets.me()
+        print(wallet.id, wallet.email)
 
-        # List templates
-        templates = client.templates.list(limit=20)
-
-        # Create an object
-        obj = client.objects.create(
-            template_id="tmpl_abc123",
-            properties={"name": "My Token"}
-        )
+        # List templates (returns PaginatedResponse[Template])
+        page = client.templates.list(limit=20)
+        for tmpl in page.items:
+            print(tmpl.name)
 
     Args:
         api_key: Your DUAL API key or JWT token.
+        auth_mode: How credentials are sent — ``API_KEY`` (default),
+            ``BEARER``, or ``BOTH``. See :class:`AuthMode`.
         base_url: API base URL (default: ``https://blockv-labs.io``).
         timeout: Request timeout in seconds (default: 30).
         max_retries: Maximum retry attempts for transient errors (default: 3).
@@ -73,6 +72,7 @@ class DualClient:
         self,
         *,
         api_key: str,
+        auth_mode: AuthMode = AuthMode.API_KEY,
         base_url: str = _DEFAULT_BASE_URL,
         timeout: float = 30.0,
         max_retries: int = 3,
@@ -81,6 +81,7 @@ class DualClient:
     ) -> None:
         self._transport = Transport(
             api_key=api_key,
+            auth_mode=auth_mode,
             base_url=base_url,
             timeout=timeout,
             max_retries=max_retries,
@@ -134,6 +135,8 @@ class AsyncDualClient:
 
     Args:
         api_key: Your DUAL API key or JWT token.
+        auth_mode: How credentials are sent — ``API_KEY`` (default),
+            ``BEARER``, or ``BOTH``. See :class:`AuthMode`.
         base_url: API base URL (default: ``https://blockv-labs.io``).
         timeout: Request timeout in seconds (default: 30).
         max_retries: Maximum retry attempts for transient errors (default: 3).
@@ -145,6 +148,7 @@ class AsyncDualClient:
         self,
         *,
         api_key: str,
+        auth_mode: AuthMode = AuthMode.API_KEY,
         base_url: str = _DEFAULT_BASE_URL,
         timeout: float = 30.0,
         max_retries: int = 3,
@@ -153,6 +157,7 @@ class AsyncDualClient:
     ) -> None:
         self._transport = AsyncTransport(
             api_key=api_key,
+            auth_mode=auth_mode,
             base_url=base_url,
             timeout=timeout,
             max_retries=max_retries,

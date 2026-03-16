@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import enum
 import time
 from typing import Any
 
@@ -21,6 +22,19 @@ _DEFAULT_MAX_RETRIES = 3
 _DEFAULT_BACKOFF = 1.0
 
 _RETRYABLE_STATUS = frozenset({429, 500, 502, 503, 504})
+
+
+class AuthMode(enum.Enum):
+    """Authentication strategy for API requests.
+
+    - ``API_KEY``: sends ``x-api-key`` header (for long-lived API keys).
+    - ``BEARER``: sends ``Authorization: Bearer <token>`` header (for JWTs).
+    - ``BOTH``: sends both headers (legacy compatibility; not recommended).
+    """
+
+    API_KEY = "api_key"
+    BEARER = "bearer"
+    BOTH = "both"
 
 
 def _error_from_response(resp: httpx.Response) -> DualError:
@@ -46,13 +60,67 @@ def _error_from_response(resp: httpx.Response) -> DualError:
     return DualError(message, **kwargs)
 
 
+def _build_auth_headers(api_key: str, auth_mode: AuthMode) -> dict[str, str]:
+    """Build authentication headers based on the chosen strategy."""
+    headers: dict[str, str] = {}
+    if auth_mode in (AuthMode.API_KEY, AuthMode.BOTH):
+        headers["x-api-key"] = api_key
+    if auth_mode in (AuthMode.BEARER, AuthMode.BOTH):
+        headers["Authorization"] = f"Bearer {api_key}"
+    return headers
+
+
+def _prepare_request_kwargs(
+    *,
+    params: dict[str, Any] | None = None,
+    json: dict[str, Any] | None = None,
+    data: Any | None = None,
+    files: Any | None = None,
+) -> dict[str, Any]:
+    """Prepare keyword arguments for an httpx request.
+
+    When ``files`` is provided, we omit ``json`` and let httpx set the
+    ``Content-Type: multipart/form-data`` boundary automatically.
+    Any ``data`` dict is passed alongside ``files`` as form fields.
+    """
+    kwargs: dict[str, Any] = {}
+
+    if params:
+        kwargs["params"] = {k: v for k, v in params.items() if v is not None}
+
+    if files is not None:
+        # Multipart upload — httpx handles Content-Type automatically.
+        kwargs["files"] = files
+        if data is not None:
+            kwargs["data"] = data
+        # Override the default JSON Content-Type so httpx can set multipart.
+        kwargs["headers"] = {"Content-Type": None}  # type: ignore[dict-item]
+    elif json is not None:
+        kwargs["json"] = json
+    elif data is not None:
+        kwargs["data"] = data
+
+    return kwargs
+
+
 class Transport:
-    """Synchronous HTTP transport using httpx."""
+    """Synchronous HTTP transport using httpx.
+
+    Args:
+        api_key: API key or JWT token.
+        auth_mode: How to send credentials (default: ``API_KEY``).
+        base_url: API base URL.
+        timeout: Request timeout in seconds.
+        max_retries: Maximum retry attempts on transient errors.
+        backoff: Base backoff in seconds (doubles each attempt).
+        headers: Additional headers merged into every request.
+    """
 
     def __init__(
         self,
         *,
         api_key: str,
+        auth_mode: AuthMode = AuthMode.API_KEY,
         base_url: str = _DEFAULT_BASE_URL,
         timeout: float = _DEFAULT_TIMEOUT,
         max_retries: int = _DEFAULT_MAX_RETRIES,
@@ -60,18 +128,17 @@ class Transport:
         headers: dict[str, str] | None = None,
     ) -> None:
         self._api_key = api_key
+        self._auth_mode = auth_mode
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout
         self._max_retries = max_retries
         self._backoff = backoff
 
-        default_headers = {
-            "x-api-key": api_key,
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
+        default_headers: dict[str, str] = {
             "Accept": "application/json",
             "User-Agent": "dual-sdk-python/1.0.0",
         }
+        default_headers.update(_build_auth_headers(api_key, auth_mode))
         if headers:
             default_headers.update(headers)
 
@@ -92,22 +159,14 @@ class Transport:
         files: Any | None = None,
     ) -> Any:
         """Execute an HTTP request with automatic retry on transient failures."""
+        req_kwargs = _prepare_request_kwargs(
+            params=params, json=json, data=data, files=files
+        )
         last_error: Exception | None = None
+
         for attempt in range(self._max_retries + 1):
             try:
-                kwargs: dict[str, Any] = {}
-                if params:
-                    kwargs["params"] = {k: v for k, v in params.items() if v is not None}
-                if json is not None:
-                    kwargs["json"] = json
-                if data is not None:
-                    kwargs["data"] = data
-                if files is not None:
-                    kwargs["files"] = files
-                    # Remove Content-Type for multipart uploads
-                    kwargs["headers"] = {"Content-Type": ""}
-
-                resp = self._client.request(method, path, **kwargs)
+                resp = self._client.request(method, path, **req_kwargs)
 
                 if resp.status_code >= 400:
                     err = _error_from_response(resp)
@@ -148,12 +207,16 @@ class Transport:
 
 
 class AsyncTransport:
-    """Asynchronous HTTP transport using httpx."""
+    """Asynchronous HTTP transport using httpx.
+
+    Same interface as :class:`Transport` but uses ``httpx.AsyncClient``.
+    """
 
     def __init__(
         self,
         *,
         api_key: str,
+        auth_mode: AuthMode = AuthMode.API_KEY,
         base_url: str = _DEFAULT_BASE_URL,
         timeout: float = _DEFAULT_TIMEOUT,
         max_retries: int = _DEFAULT_MAX_RETRIES,
@@ -161,18 +224,17 @@ class AsyncTransport:
         headers: dict[str, str] | None = None,
     ) -> None:
         self._api_key = api_key
+        self._auth_mode = auth_mode
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout
         self._max_retries = max_retries
         self._backoff = backoff
 
-        default_headers = {
-            "x-api-key": api_key,
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
+        default_headers: dict[str, str] = {
             "Accept": "application/json",
             "User-Agent": "dual-sdk-python/1.0.0",
         }
+        default_headers.update(_build_auth_headers(api_key, auth_mode))
         if headers:
             default_headers.update(headers)
 
@@ -193,21 +255,14 @@ class AsyncTransport:
         files: Any | None = None,
     ) -> Any:
         """Execute an async HTTP request with automatic retry."""
+        req_kwargs = _prepare_request_kwargs(
+            params=params, json=json, data=data, files=files
+        )
         last_error: Exception | None = None
+
         for attempt in range(self._max_retries + 1):
             try:
-                kwargs: dict[str, Any] = {}
-                if params:
-                    kwargs["params"] = {k: v for k, v in params.items() if v is not None}
-                if json is not None:
-                    kwargs["json"] = json
-                if data is not None:
-                    kwargs["data"] = data
-                if files is not None:
-                    kwargs["files"] = files
-                    kwargs["headers"] = {"Content-Type": ""}
-
-                resp = await self._client.request(method, path, **kwargs)
+                resp = await self._client.request(method, path, **req_kwargs)
 
                 if resp.status_code >= 400:
                     err = _error_from_response(resp)

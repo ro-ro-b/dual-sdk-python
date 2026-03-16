@@ -4,43 +4,50 @@ from __future__ import annotations
 
 from typing import Any
 
-from dual_sdk._base import AsyncResource, SyncResource
+from dual_sdk._base import AsyncResource, SyncResource, _parse
+from dual_sdk.models import Object, PaginatedResponse
 
 
 class Objects(SyncResource):
     """Synchronous objects client (9 endpoints)."""
 
-    def list(self, *, limit: int = 20, next: str | None = None, **params: Any) -> dict[str, Any]:
+    def list(self, *, limit: int = 20, next: str | None = None, **params: Any) -> PaginatedResponse[Object]:
         """List objects with cursor pagination."""
-        return self._get("/objects", params={"limit": limit, "next": next, **params})
+        data = self._get("/objects", params={"limit": limit, "next": next, **params})
+        return _parse(PaginatedResponse[Object], data)
 
-    def get(self, object_id: str) -> dict[str, Any]:
+    def get(self, object_id: str) -> Object:
         """Get an object by ID."""
-        return self._get(f"/objects/{object_id}")
+        return _parse(Object, self._get(f"/objects/{object_id}"))
 
-    def create(self, *, template_id: str, properties: dict[str, Any] | None = None, **fields: Any) -> dict[str, Any]:
+    def create(self, *, template_id: str, properties: dict[str, Any] | None = None, **fields: Any) -> Object:
         """Create an object from a template."""
-        return self._post("/objects", json={"template_id": template_id, "properties": properties or {}, **fields})
+        return _parse(Object, self._post("/objects", json={"template_id": template_id, "properties": properties or {}, **fields}))
 
-    def update(self, object_id: str, **fields: Any) -> dict[str, Any]:
+    def update(self, object_id: str, **fields: Any) -> Object:
         """Update an existing object."""
-        return self._patch(f"/objects/{object_id}", json=fields)
+        return _parse(Object, self._patch(f"/objects/{object_id}", json=fields))
 
-    def children(self, object_id: str, *, limit: int = 20, next: str | None = None) -> dict[str, Any]:
+    def children(self, object_id: str, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[Object]:
         """Get child objects."""
-        return self._get(f"/objects/{object_id}/children", params={"limit": limit, "next": next})
+        data = self._get(f"/objects/{object_id}/children", params={"limit": limit, "next": next})
+        return _parse(PaginatedResponse[Object], data)
 
-    def parents(self, object_id: str, *, limit: int = 20, next: str | None = None) -> dict[str, Any]:
+    def parents(self, object_id: str, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[Object]:
         """Get parent objects."""
-        return self._get(f"/objects/{object_id}/parents", params={"limit": limit, "next": next})
+        data = self._get(f"/objects/{object_id}/parents", params={"limit": limit, "next": next})
+        return _parse(PaginatedResponse[Object], data)
 
-    def activity(self, object_id: str, *, limit: int = 20, next: str | None = None) -> dict[str, Any]:
+    def activity(self, object_id: str, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[Action]:
         """Get activity log for an object."""
-        return self._get(f"/objects/{object_id}/activity", params={"limit": limit, "next": next})
+        from dual_sdk.models import Action
+        data = self._get(f"/objects/{object_id}/activity", params={"limit": limit, "next": next})
+        return _parse(PaginatedResponse[Action], data)
 
-    def search(self, query: dict[str, Any]) -> dict[str, Any]:
+    def search(self, query: dict[str, Any]) -> PaginatedResponse[Object]:
         """Search objects with a query payload."""
-        return self._post("/objects/search", json=query)
+        data = self._post("/objects/search", json=query)
+        return _parse(PaginatedResponse[Object], data)
 
     def count(self, query: dict[str, Any]) -> dict[str, Any]:
         """Count objects matching a query."""
@@ -50,29 +57,35 @@ class Objects(SyncResource):
 class AsyncObjects(AsyncResource):
     """Asynchronous objects client (9 endpoints)."""
 
-    async def list(self, *, limit: int = 20, next: str | None = None, **params: Any) -> dict[str, Any]:
-        return await self._get("/objects", params={"limit": limit, "next": next, **params})
+    async def list(self, *, limit: int = 20, next: str | None = None, **params: Any) -> PaginatedResponse[Object]:
+        data = await self._get("/objects", params={"limit": limit, "next": next, **params})
+        return _parse(PaginatedResponse[Object], data)
 
-    async def get(self, object_id: str) -> dict[str, Any]:
-        return await self._get(f"/objects/{object_id}")
+    async def get(self, object_id: str) -> Object:
+        return _parse(Object, await self._get(f"/objects/{object_id}"))
 
-    async def create(self, *, template_id: str, properties: dict[str, Any] | None = None, **fields: Any) -> dict[str, Any]:
-        return await self._post("/objects", json={"template_id": template_id, "properties": properties or {}, **fields})
+    async def create(self, *, template_id: str, properties: dict[str, Any] | None = None, **fields: Any) -> Object:
+        return _parse(Object, await self._post("/objects", json={"template_id": template_id, "properties": properties or {}, **fields}))
 
-    async def update(self, object_id: str, **fields: Any) -> dict[str, Any]:
-        return await self._patch(f"/objects/{object_id}", json=fields)
+    async def update(self, object_id: str, **fields: Any) -> Object:
+        return _parse(Object, await self._patch(f"/objects/{object_id}", json=fields))
 
-    async def children(self, object_id: str, *, limit: int = 20, next: str | None = None) -> dict[str, Any]:
-        return await self._get(f"/objects/{object_id}/children", params={"limit": limit, "next": next})
+    async def children(self, object_id: str, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[Object]:
+        data = await self._get(f"/objects/{object_id}/children", params={"limit": limit, "next": next})
+        return _parse(PaginatedResponse[Object], data)
 
-    async def parents(self, object_id: str, *, limit: int = 20, next: str | None = None) -> dict[str, Any]:
-        return await self._get(f"/objects/{object_id}/parents", params={"limit": limit, "next": next})
+    async def parents(self, object_id: str, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[Object]:
+        data = await self._get(f"/objects/{object_id}/parents", params={"limit": limit, "next": next})
+        return _parse(PaginatedResponse[Object], data)
 
-    async def activity(self, object_id: str, *, limit: int = 20, next: str | None = None) -> dict[str, Any]:
-        return await self._get(f"/objects/{object_id}/activity", params={"limit": limit, "next": next})
+    async def activity(self, object_id: str, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[Action]:
+        from dual_sdk.models import Action
+        data = await self._get(f"/objects/{object_id}/activity", params={"limit": limit, "next": next})
+        return _parse(PaginatedResponse[Action], data)
 
-    async def search(self, query: dict[str, Any]) -> dict[str, Any]:
-        return await self._post("/objects/search", json=query)
+    async def search(self, query: dict[str, Any]) -> PaginatedResponse[Object]:
+        data = await self._post("/objects/search", json=query)
+        return _parse(PaginatedResponse[Object], data)
 
     async def count(self, query: dict[str, Any]) -> dict[str, Any]:
         return await self._post("/objects/count", json=query)

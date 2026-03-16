@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from dual_sdk._base import AsyncResource, SyncResource
+from dual_sdk._base import AsyncResource, SyncResource, _parse
+from dual_sdk.models import PaginatedResponse, SupportMessage
 
 
 class Support(SyncResource):
@@ -14,17 +15,18 @@ class Support(SyncResource):
         """Request access to a feature."""
         return self._post("/support/request-access", json={"feature": feature, "reason": reason})
 
-    def list_messages(self, *, limit: int = 20, next: str | None = None) -> dict[str, Any]:
+    def list_messages(self, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[SupportMessage]:
         """List support messages with cursor pagination."""
-        return self._get("/support", params={"limit": limit, "next": next})
+        data = self._get("/support", params={"limit": limit, "next": next})
+        return _parse(PaginatedResponse[SupportMessage], data)
 
-    def send_message(self, *, content: str, **fields: Any) -> dict[str, Any]:
+    def send_message(self, *, content: str, **fields: Any) -> SupportMessage:
         """Send a support message."""
-        return self._post("/support", json={"content": content, **fields})
+        return _parse(SupportMessage, self._post("/support", json={"content": content, **fields}))
 
-    def get_message(self, message_id: str) -> dict[str, Any]:
+    def get_message(self, message_id: str) -> SupportMessage:
         """Get a support message by ID."""
-        return self._get(f"/support/{message_id}")
+        return _parse(SupportMessage, self._get(f"/support/{message_id}"))
 
 
 class AsyncSupport(AsyncResource):
@@ -33,11 +35,12 @@ class AsyncSupport(AsyncResource):
     async def request_access(self, *, feature: str, reason: str | None = None) -> dict[str, Any]:
         return await self._post("/support/request-access", json={"feature": feature, "reason": reason})
 
-    async def list_messages(self, *, limit: int = 20, next: str | None = None) -> dict[str, Any]:
-        return await self._get("/support", params={"limit": limit, "next": next})
+    async def list_messages(self, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[SupportMessage]:
+        data = await self._get("/support", params={"limit": limit, "next": next})
+        return _parse(PaginatedResponse[SupportMessage], data)
 
-    async def send_message(self, *, content: str, **fields: Any) -> dict[str, Any]:
-        return await self._post("/support", json={"content": content, **fields})
+    async def send_message(self, *, content: str, **fields: Any) -> SupportMessage:
+        return _parse(SupportMessage, await self._post("/support", json={"content": content, **fields}))
 
-    async def get_message(self, message_id: str) -> dict[str, Any]:
-        return await self._get(f"/support/{message_id}")
+    async def get_message(self, message_id: str) -> SupportMessage:
+        return _parse(SupportMessage, await self._get(f"/support/{message_id}"))

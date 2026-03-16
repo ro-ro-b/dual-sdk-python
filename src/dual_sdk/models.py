@@ -1,39 +1,49 @@
-"""Shared data models for the DUAL SDK."""
+"""Shared data models for the DUAL SDK.
+
+All models use ``extra="allow"`` so that unknown fields returned by the API
+are preserved as extra attributes rather than raising validation errors.
+"""
 
 from __future__ import annotations
 
 from typing import Any, Generic, TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 T = TypeVar("T")
+
+
+class _BaseModel(BaseModel):
+    """SDK base model — tolerates extra fields from the API."""
+
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
 
 # ── Pagination ──────────────────────────────────────────────
 
 
-class PaginatedResponse(BaseModel, Generic[T]):
+class PaginatedResponse(_BaseModel, Generic[T]):
     """Cursor-based paginated response wrapper.
 
     Attributes:
         items: List of result objects.
-        next: Opaque cursor for the next page, or ``None`` if this is the last page.
+        cursor: Opaque cursor for the next page, or ``None`` if this is the last page.
     """
 
     items: list[T] = Field(default_factory=list)
-    next: str | None = None
+    cursor: str | None = Field(default=None, alias="next")
 
 
 # ── Auth ────────────────────────────────────────────────────
 
 
-class TokenPair(BaseModel):
+class TokenPair(_BaseModel):
     access_token: str
     refresh_token: str | None = None
     token_type: str = "Bearer"
 
 
-class Wallet(BaseModel):
+class Wallet(_BaseModel):
     id: str
     email: str | None = None
     name: str | None = None
@@ -44,7 +54,7 @@ class Wallet(BaseModel):
 # ── Templates ───────────────────────────────────────────────
 
 
-class Template(BaseModel):
+class Template(_BaseModel):
     id: str
     name: str
     description: str | None = None
@@ -54,7 +64,7 @@ class Template(BaseModel):
     updated_at: str | None = None
 
 
-class Variation(BaseModel):
+class Variation(_BaseModel):
     id: str
     template_id: str
     name: str
@@ -64,7 +74,7 @@ class Variation(BaseModel):
 # ── Objects ─────────────────────────────────────────────────
 
 
-class Object(BaseModel):
+class Object(_BaseModel):
     id: str
     template_id: str
     owner_id: str | None = None
@@ -76,27 +86,27 @@ class Object(BaseModel):
 # ── Organizations ───────────────────────────────────────────
 
 
-class Organization(BaseModel):
+class Organization(_BaseModel):
     id: str
     name: str
     description: str | None = None
     meta: dict[str, Any] = Field(default_factory=dict)
 
 
-class Member(BaseModel):
+class Member(_BaseModel):
     id: str
     wallet_id: str
     role: str | None = None
     organization_id: str | None = None
 
 
-class Role(BaseModel):
+class Role(_BaseModel):
     id: str
     name: str
     permissions: list[str] = Field(default_factory=list)
 
 
-class Invitation(BaseModel):
+class Invitation(_BaseModel):
     id: str
     email: str | None = None
     organization_id: str | None = None
@@ -106,13 +116,13 @@ class Invitation(BaseModel):
 # ── Payments ────────────────────────────────────────────────
 
 
-class PaymentConfig(BaseModel):
+class PaymentConfig(_BaseModel):
     multi_token_deposit_address: str | None = None
     vee_address: str | None = None
     supported_tokens: list[dict[str, Any]] = Field(default_factory=list)
 
 
-class Deposit(BaseModel):
+class Deposit(_BaseModel):
     id: str | None = None
     tx_hash: str | None = None
     token: str | None = None
@@ -122,7 +132,7 @@ class Deposit(BaseModel):
 # ── Webhooks ────────────────────────────────────────────────
 
 
-class Webhook(BaseModel):
+class Webhook(_BaseModel):
     id: str
     url: str
     events: list[str] = Field(default_factory=list)
@@ -133,14 +143,14 @@ class Webhook(BaseModel):
 # ── Event Bus ───────────────────────────────────────────────
 
 
-class Action(BaseModel):
+class Action(_BaseModel):
     id: str | None = None
     action_type: str | None = None
     status: str | None = None
     payload: dict[str, Any] = Field(default_factory=dict)
 
 
-class ActionType(BaseModel):
+class ActionType(_BaseModel):
     id: str
     name: str
     description: str | None = None
@@ -149,7 +159,7 @@ class ActionType(BaseModel):
 # ── Faces ───────────────────────────────────────────────────
 
 
-class Face(BaseModel):
+class Face(_BaseModel):
     id: str
     template_id: str | None = None
     display_type: str | None = None
@@ -159,7 +169,7 @@ class Face(BaseModel):
 # ── Storage ─────────────────────────────────────────────────
 
 
-class FileRecord(BaseModel):
+class FileRecord(_BaseModel):
     id: str
     url: str | None = None
     content_type: str | None = None
@@ -169,14 +179,14 @@ class FileRecord(BaseModel):
 # ── Sequencer ───────────────────────────────────────────────
 
 
-class Batch(BaseModel):
+class Batch(_BaseModel):
     id: str
     status: str | None = None
     action_count: int | None = None
     created_at: str | None = None
 
 
-class Checkpoint(BaseModel):
+class Checkpoint(_BaseModel):
     id: str
     batch_id: str | None = None
     merkle_root: str | None = None
@@ -186,13 +196,13 @@ class Checkpoint(BaseModel):
 # ── Notifications ───────────────────────────────────────────
 
 
-class Message(BaseModel):
+class Message(_BaseModel):
     id: str
     content: str | None = None
     sent_at: str | None = None
 
 
-class MessageTemplate(BaseModel):
+class MessageTemplate(_BaseModel):
     id: str
     name: str
     body: str | None = None
@@ -201,7 +211,7 @@ class MessageTemplate(BaseModel):
 # ── API Keys ────────────────────────────────────────────────
 
 
-class ApiKey(BaseModel):
+class ApiKey(_BaseModel):
     id: str
     name: str | None = None
     key: str | None = None
@@ -211,7 +221,7 @@ class ApiKey(BaseModel):
 # ── Support ─────────────────────────────────────────────────
 
 
-class SupportMessage(BaseModel):
+class SupportMessage(_BaseModel):
     id: str
     content: str | None = None
     created_at: str | None = None
@@ -220,7 +230,7 @@ class SupportMessage(BaseModel):
 # ── Public / Indexer ────────────────────────────────────────
 
 
-class PublicStats(BaseModel):
+class PublicStats(_BaseModel):
     total_templates: int | None = None
     total_objects: int | None = None
     total_organizations: int | None = None
