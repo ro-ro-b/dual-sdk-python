@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import pytest
+from pytest_httpx import HTTPXMock
+
 from dual_sdk import (
     AsyncDualClient,
     AuthMode,
@@ -25,7 +27,6 @@ from dual_sdk.models import (
     Wallet,
     Webhook,
 )
-from pytest_httpx import HTTPXMock
 
 
 @pytest.fixture
