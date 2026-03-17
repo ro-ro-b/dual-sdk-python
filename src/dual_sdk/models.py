@@ -6,7 +6,7 @@ are preserved as extra attributes rather than raising validation errors.
 
 from __future__ import annotations
 
-from typing import Any, Generic, TypeVar
+from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -34,11 +34,11 @@ class PaginatedResponse(_BaseModel, Generic[T]):
                Aliased from the ``"next"`` key in the API JSON response.
     """
 
-    items: list[T] = Field(default_factory=list)
-    cursor: str | None = Field(default=None, alias="next")
+    items: List[T] = Field(default_factory=list)
+    cursor: Optional[str] = Field(default=None, alias="next")
 
     @property
-    def next(self) -> str | None:
+    def next(self) -> Optional[str]:
         """Alias for ``cursor`` — matches the raw API field name."""
         return self.cursor
 
@@ -48,16 +48,16 @@ class PaginatedResponse(_BaseModel, Generic[T]):
 
 class TokenPair(_BaseModel):
     access_token: str
-    refresh_token: str | None = None
+    refresh_token: Optional[str] = None
     token_type: str = "Bearer"
 
 
 class Wallet(_BaseModel):
     id: str
-    email: str | None = None
-    name: str | None = None
-    avatar: str | None = None
-    meta: dict[str, Any] = Field(default_factory=dict)
+    email: Optional[str] = None
+    name: Optional[str] = None
+    avatar: Optional[str] = None
+    meta: Dict[str, Any] = Field(default_factory=dict)
 
 
 # ── Templates ───────────────────────────────────────────────
@@ -66,18 +66,18 @@ class Wallet(_BaseModel):
 class Template(_BaseModel):
     id: str
     name: str
-    description: str | None = None
-    organization_id: str | None = None
-    properties: dict[str, Any] = Field(default_factory=dict)
-    created_at: str | None = None
-    updated_at: str | None = None
+    description: Optional[str] = None
+    organization_id: Optional[str] = None
+    properties: Dict[str, Any] = Field(default_factory=dict)
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
 
 class Variation(_BaseModel):
     id: str
     template_id: str
     name: str
-    properties: dict[str, Any] = Field(default_factory=dict)
+    properties: Dict[str, Any] = Field(default_factory=dict)
 
 
 # ── Objects ─────────────────────────────────────────────────
@@ -86,10 +86,10 @@ class Variation(_BaseModel):
 class Object(_BaseModel):
     id: str
     template_id: str
-    owner_id: str | None = None
-    properties: dict[str, Any] = Field(default_factory=dict)
-    created_at: str | None = None
-    updated_at: str | None = None
+    owner_id: Optional[str] = None
+    properties: Dict[str, Any] = Field(default_factory=dict)
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
 
 # ── Organizations ───────────────────────────────────────────
@@ -98,27 +98,27 @@ class Object(_BaseModel):
 class Organization(_BaseModel):
     id: str
     name: str
-    description: str | None = None
-    meta: dict[str, Any] = Field(default_factory=dict)
+    description: Optional[str] = None
+    meta: Dict[str, Any] = Field(default_factory=dict)
 
 
 class Member(_BaseModel):
     id: str
     wallet_id: str
-    role: str | None = None
-    organization_id: str | None = None
+    role: Optional[str] = None
+    organization_id: Optional[str] = None
 
 
 class Role(_BaseModel):
     id: str
     name: str
-    permissions: list[str] = Field(default_factory=list)
+    permissions: List[str] = Field(default_factory=list)
 
 
 class Invitation(_BaseModel):
     id: str
-    email: str | None = None
-    organization_id: str | None = None
+    email: Optional[str] = None
+    organization_id: Optional[str] = None
     status: str = "pending"
 
 
@@ -126,16 +126,16 @@ class Invitation(_BaseModel):
 
 
 class PaymentConfig(_BaseModel):
-    multi_token_deposit_address: str | None = None
-    vee_address: str | None = None
-    supported_tokens: list[dict[str, Any]] = Field(default_factory=list)
+    multi_token_deposit_address: Optional[str] = None
+    vee_address: Optional[str] = None
+    supported_tokens: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 class Deposit(_BaseModel):
-    id: str | None = None
-    tx_hash: str | None = None
-    token: str | None = None
-    amount: str | None = None
+    id: Optional[str] = None
+    tx_hash: Optional[str] = None
+    token: Optional[str] = None
+    amount: Optional[str] = None
 
 
 # ── Webhooks ────────────────────────────────────────────────
@@ -144,8 +144,8 @@ class Deposit(_BaseModel):
 class Webhook(_BaseModel):
     id: str
     url: str
-    events: list[str] = Field(default_factory=list)
-    secret: str | None = None
+    events: List[str] = Field(default_factory=list)
+    secret: Optional[str] = None
     active: bool = True
 
 
@@ -153,16 +153,16 @@ class Webhook(_BaseModel):
 
 
 class Action(_BaseModel):
-    id: str | None = None
-    action_type: str | None = None
-    status: str | None = None
-    payload: dict[str, Any] = Field(default_factory=dict)
+    id: Optional[str] = None
+    action_type: Optional[str] = None
+    status: Optional[str] = None
+    payload: Dict[str, Any] = Field(default_factory=dict)
 
 
 class ActionType(_BaseModel):
     id: str
     name: str
-    description: str | None = None
+    description: Optional[str] = None
 
 
 # ── Faces ───────────────────────────────────────────────────
@@ -170,9 +170,9 @@ class ActionType(_BaseModel):
 
 class Face(_BaseModel):
     id: str
-    template_id: str | None = None
-    display_type: str | None = None
-    resources: list[str] = Field(default_factory=list)
+    template_id: Optional[str] = None
+    display_type: Optional[str] = None
+    resources: List[str] = Field(default_factory=list)
 
 
 # ── Storage ─────────────────────────────────────────────────
@@ -180,9 +180,9 @@ class Face(_BaseModel):
 
 class FileRecord(_BaseModel):
     id: str
-    url: str | None = None
-    content_type: str | None = None
-    size: int | None = None
+    url: Optional[str] = None
+    content_type: Optional[str] = None
+    size: Optional[int] = None
 
 
 # ── Sequencer ───────────────────────────────────────────────
@@ -190,16 +190,16 @@ class FileRecord(_BaseModel):
 
 class Batch(_BaseModel):
     id: str
-    status: str | None = None
-    action_count: int | None = None
-    created_at: str | None = None
+    status: Optional[str] = None
+    action_count: Optional[int] = None
+    created_at: Optional[str] = None
 
 
 class Checkpoint(_BaseModel):
     id: str
-    batch_id: str | None = None
-    merkle_root: str | None = None
-    created_at: str | None = None
+    batch_id: Optional[str] = None
+    merkle_root: Optional[str] = None
+    created_at: Optional[str] = None
 
 
 # ── Notifications ───────────────────────────────────────────
@@ -207,14 +207,14 @@ class Checkpoint(_BaseModel):
 
 class Message(_BaseModel):
     id: str
-    content: str | None = None
-    sent_at: str | None = None
+    content: Optional[str] = None
+    sent_at: Optional[str] = None
 
 
 class MessageTemplate(_BaseModel):
     id: str
     name: str
-    body: str | None = None
+    body: Optional[str] = None
 
 
 # ── API Keys ────────────────────────────────────────────────
@@ -222,9 +222,9 @@ class MessageTemplate(_BaseModel):
 
 class ApiKey(_BaseModel):
     id: str
-    name: str | None = None
-    key: str | None = None
-    created_at: str | None = None
+    name: Optional[str] = None
+    key: Optional[str] = None
+    created_at: Optional[str] = None
 
 
 # ── Support ─────────────────────────────────────────────────
@@ -232,14 +232,14 @@ class ApiKey(_BaseModel):
 
 class SupportMessage(_BaseModel):
     id: str
-    content: str | None = None
-    created_at: str | None = None
+    content: Optional[str] = None
+    created_at: Optional[str] = None
 
 
 # ── Public / Indexer ────────────────────────────────────────
 
 
 class PublicStats(_BaseModel):
-    total_templates: int | None = None
-    total_objects: int | None = None
-    total_organizations: int | None = None
+    total_templates: Optional[int] = None
+    total_objects: Optional[int] = None
+    total_organizations: Optional[int] = None

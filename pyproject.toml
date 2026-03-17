@@ -55,6 +55,9 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 [tool.ruff.lint.isort]
 known-first-party = ["dual_sdk"]
 
+[tool.ruff.lint.per-file-ignores]
+"src/dual_sdk/models.py" = ["UP006", "UP007", "UP035"]
+
 [tool.mypy]
 python_version = "3.9"
 strict = true
