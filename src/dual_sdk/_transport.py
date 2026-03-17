@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import enum
 import time
+from email.utils import parsedate_to_datetime
 from typing import Any
 
 import httpx
@@ -54,9 +55,18 @@ def _error_from_response(resp: httpx.Response) -> DualError:
         return DualNotFoundError(message, **kwargs)
     if resp.status_code == 429:
         retry_after = resp.headers.get("retry-after")
-        return DualRateLimitError(
-            message, retry_after=float(retry_after) if retry_after else None, **kwargs
-        )
+        retry_seconds: float | None = None
+        if retry_after:
+            try:
+                retry_seconds = float(retry_after)
+            except ValueError:
+                # RFC 7231: Retry-After may be an HTTP-date
+                try:
+                    dt = parsedate_to_datetime(retry_after)
+                    retry_seconds = max(0.0, (dt - dt.now(dt.tzinfo)).total_seconds())
+                except Exception:
+                    pass
+        return DualRateLimitError(message, retry_after=retry_seconds, **kwargs)
     return DualError(message, **kwargs)
 
 

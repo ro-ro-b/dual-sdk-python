@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from dual_sdk._base import AsyncResource, SyncResource, _parse
-from dual_sdk.models import TokenPair, Wallet
+from dual_sdk.models import StatusResult, TokenPair, Wallet
 
 
 class Wallets(SyncResource):
@@ -31,14 +31,18 @@ class Wallets(SyncResource):
         """Verify registration with confirmation token."""
         return _parse(TokenPair, self._post("/wallets/register/verify", json={"token": token}))
 
-    def request_reset_code(self, email: str) -> dict[str, Any]:
+    def request_reset_code(self, email: str) -> StatusResult:
         """Request a password reset code."""
-        return self._post("/wallets/reset-code", json={"email": email})
+        return _parse(StatusResult, self._post("/wallets/reset-code", json={"email": email}))
 
-    def verify_reset_code(self, code: str, new_password: str) -> dict[str, Any]:
+    def verify_reset_code(self, code: str, new_password: str) -> StatusResult:
         """Verify reset code and set new password."""
-        return self._post(
-            "/wallets/reset-code/verify", json={"code": code, "new_password": new_password}
+        return _parse(
+            StatusResult,
+            self._post(
+                "/wallets/reset-code/verify",
+                json={"code": code, "new_password": new_password},
+            ),
         )
 
     def me(self) -> Wallet:
@@ -123,14 +127,17 @@ class AsyncWallets(AsyncResource):
             TokenPair, await self._post("/wallets/register/verify", json={"token": token})
         )
 
-    async def request_reset_code(self, email: str) -> dict[str, Any]:
+    async def request_reset_code(self, email: str) -> StatusResult:
         """Request a password reset code."""
-        return await self._post("/wallets/reset-code", json={"email": email})
+        return _parse(StatusResult, await self._post("/wallets/reset-code", json={"email": email}))
 
-    async def verify_reset_code(self, code: str, new_password: str) -> dict[str, Any]:
+    async def verify_reset_code(self, code: str, new_password: str) -> StatusResult:
         """Verify reset code and set new password."""
-        return await self._post(
-            "/wallets/reset-code/verify", json={"code": code, "new_password": new_password}
+        return _parse(
+            StatusResult,
+            await self._post(
+                "/wallets/reset-code/verify", json={"code": code, "new_password": new_password}
+            ),
         )
 
     async def me(self) -> Wallet:

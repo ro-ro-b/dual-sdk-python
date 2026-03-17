@@ -5,7 +5,16 @@ from __future__ import annotations
 from typing import Any
 
 from dual_sdk._base import AsyncResource, SyncResource, _parse, _parse_list
-from dual_sdk.models import Invitation, Member, Organization, PaginatedResponse, Role
+from dual_sdk.models import (
+    AcceptInvitationResult,
+    Balance,
+    BalanceTransaction,
+    Invitation,
+    Member,
+    Organization,
+    PaginatedResponse,
+    Role,
+)
 
 
 class Organizations(SyncResource):
@@ -24,15 +33,16 @@ class Organizations(SyncResource):
     def update(self, org_id: str, **fields: Any) -> Organization:
         return _parse(Organization, self._put(f"/organizations/{org_id}", json=fields))
 
-    def balance(self, org_id: str) -> dict[str, Any]:
-        return self._get(f"/organizations/{org_id}/balance")
+    def balance(self, org_id: str) -> Balance:
+        return _parse(Balance, self._get(f"/organizations/{org_id}/balance"))
 
     def balance_history(
         self, org_id: str, *, limit: int = 20, next: str | None = None
-    ) -> dict[str, Any]:
-        return self._get(
+    ) -> PaginatedResponse[BalanceTransaction]:
+        data = self._get(
             f"/organizations/{org_id}/balance/history", params={"limit": limit, "next": next}
         )
+        return _parse(PaginatedResponse[BalanceTransaction], data)
 
     # ── Members ──
 
@@ -90,8 +100,11 @@ class Organizations(SyncResource):
     def delete_invitation(self, org_id: str, invitation_id: str) -> None:
         self._delete(f"/organizations/{org_id}/invitations/{invitation_id}")
 
-    def accept_invitation(self, invitation_id: str) -> dict[str, Any]:
-        return self._post(f"/organizations/invitations/{invitation_id}/accept")
+    def accept_invitation(self, invitation_id: str) -> AcceptInvitationResult:
+        return _parse(
+            AcceptInvitationResult,
+            self._post(f"/organizations/invitations/{invitation_id}/accept"),
+        )
 
 
 class AsyncOrganizations(AsyncResource):
@@ -114,15 +127,16 @@ class AsyncOrganizations(AsyncResource):
     async def update(self, org_id: str, **fields: Any) -> Organization:
         return _parse(Organization, await self._put(f"/organizations/{org_id}", json=fields))
 
-    async def balance(self, org_id: str) -> dict[str, Any]:
-        return await self._get(f"/organizations/{org_id}/balance")
+    async def balance(self, org_id: str) -> Balance:
+        return _parse(Balance, await self._get(f"/organizations/{org_id}/balance"))
 
     async def balance_history(
         self, org_id: str, *, limit: int = 20, next: str | None = None
-    ) -> dict[str, Any]:
-        return await self._get(
+    ) -> PaginatedResponse[BalanceTransaction]:
+        data = await self._get(
             f"/organizations/{org_id}/balance/history", params={"limit": limit, "next": next}
         )
+        return _parse(PaginatedResponse[BalanceTransaction], data)
 
     async def list_members(
         self, org_id: str, *, limit: int = 20, next: str | None = None
@@ -183,5 +197,8 @@ class AsyncOrganizations(AsyncResource):
     async def delete_invitation(self, org_id: str, invitation_id: str) -> None:
         await self._delete(f"/organizations/{org_id}/invitations/{invitation_id}")
 
-    async def accept_invitation(self, invitation_id: str) -> dict[str, Any]:
-        return await self._post(f"/organizations/invitations/{invitation_id}/accept")
+    async def accept_invitation(self, invitation_id: str) -> AcceptInvitationResult:
+        return _parse(
+            AcceptInvitationResult,
+            await self._post(f"/organizations/invitations/{invitation_id}/accept"),
+        )

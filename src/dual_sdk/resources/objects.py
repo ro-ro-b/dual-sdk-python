@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from dual_sdk._base import AsyncResource, SyncResource, _parse
-from dual_sdk.models import Action, Object, PaginatedResponse
+from dual_sdk.models import Action, Object, ObjectCount, PaginatedResponse
 
 
 class Objects(SyncResource):
@@ -65,9 +65,9 @@ class Objects(SyncResource):
         data = self._post("/objects/search", json=query)
         return _parse(PaginatedResponse[Object], data)
 
-    def count(self, query: dict[str, Any]) -> dict[str, Any]:
+    def count(self, query: dict[str, Any]) -> ObjectCount:
         """Count objects matching a query."""
-        return self._post("/objects/count", json=query)
+        return _parse(ObjectCount, self._post("/objects/count", json=query))
 
 
 class AsyncObjects(AsyncResource):
@@ -115,7 +115,6 @@ class AsyncObjects(AsyncResource):
     async def activity(
         self, object_id: str, *, limit: int = 20, next: str | None = None
     ) -> PaginatedResponse[Action]:
-
         data = await self._get(
             f"/objects/{object_id}/activity", params={"limit": limit, "next": next}
         )
@@ -125,5 +124,5 @@ class AsyncObjects(AsyncResource):
         data = await self._post("/objects/search", json=query)
         return _parse(PaginatedResponse[Object], data)
 
-    async def count(self, query: dict[str, Any]) -> dict[str, Any]:
-        return await self._post("/objects/count", json=query)
+    async def count(self, query: dict[str, Any]) -> ObjectCount:
+        return _parse(ObjectCount, await self._post("/objects/count", json=query))

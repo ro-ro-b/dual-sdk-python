@@ -60,6 +60,13 @@ class Wallet(_BaseModel):
     meta: Dict[str, Any] = Field(default_factory=dict)
 
 
+class StatusResult(_BaseModel):
+    """Generic status response for fire-and-forget operations."""
+
+    success: bool = True
+    message: Optional[str] = None
+
+
 # ── Templates ───────────────────────────────────────────────
 
 
@@ -81,6 +88,10 @@ class Variation(_BaseModel):
 
 
 # ── Objects ─────────────────────────────────────────────────
+
+
+class ObjectCount(_BaseModel):
+    count: int = 0
 
 
 class Object(_BaseModel):
@@ -122,6 +133,26 @@ class Invitation(_BaseModel):
     status: str = "pending"
 
 
+class Balance(_BaseModel):
+    currency: Optional[str] = None
+    amount: Optional[str] = None
+    available: Optional[str] = None
+
+
+class BalanceTransaction(_BaseModel):
+    id: Optional[str] = None
+    amount: Optional[str] = None
+    currency: Optional[str] = None
+    type: Optional[str] = None
+    created_at: Optional[str] = None
+
+
+class AcceptInvitationResult(_BaseModel):
+    organization_id: Optional[str] = None
+    member_id: Optional[str] = None
+    status: Optional[str] = None
+
+
 # ── Payments ────────────────────────────────────────────────
 
 
@@ -147,6 +178,12 @@ class Webhook(_BaseModel):
     events: List[str] = Field(default_factory=list)
     secret: Optional[str] = None
     active: bool = True
+
+
+class WebhookTestResult(_BaseModel):
+    success: bool = False
+    status_code: Optional[int] = None
+    response_body: Optional[str] = None
 
 
 # ── Event Bus ───────────────────────────────────────────────

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from dual_sdk._base import AsyncResource, SyncResource, _parse
-from dual_sdk.models import PaginatedResponse, Webhook
+from dual_sdk.models import PaginatedResponse, Webhook, WebhookTestResult
 
 
 class Webhooks(SyncResource):
@@ -34,9 +34,9 @@ class Webhooks(SyncResource):
         """Delete a webhook."""
         self._delete(f"/webhooks/{webhook_id}")
 
-    def test(self, webhook_id: str) -> dict[str, Any]:
+    def test(self, webhook_id: str) -> WebhookTestResult:
         """Send a test event to a webhook."""
-        return self._post(f"/webhooks/{webhook_id}/test")
+        return _parse(WebhookTestResult, self._post(f"/webhooks/{webhook_id}/test"))
 
 
 class AsyncWebhooks(AsyncResource):
@@ -60,5 +60,5 @@ class AsyncWebhooks(AsyncResource):
     async def delete(self, webhook_id: str) -> None:
         await self._delete(f"/webhooks/{webhook_id}")
 
-    async def test(self, webhook_id: str) -> dict[str, Any]:
-        return await self._post(f"/webhooks/{webhook_id}/test")
+    async def test(self, webhook_id: str) -> WebhookTestResult:
+        return _parse(WebhookTestResult, await self._post(f"/webhooks/{webhook_id}/test"))

@@ -5,15 +5,18 @@ from __future__ import annotations
 from typing import Any
 
 from dual_sdk._base import AsyncResource, SyncResource, _parse
-from dual_sdk.models import PaginatedResponse, SupportMessage
+from dual_sdk.models import PaginatedResponse, StatusResult, SupportMessage
 
 
 class Support(SyncResource):
     """Synchronous support client (4 endpoints)."""
 
-    def request_access(self, *, feature: str, reason: str | None = None) -> dict[str, Any]:
+    def request_access(self, *, feature: str, reason: str | None = None) -> StatusResult:
         """Request access to a feature."""
-        return self._post("/support/request-access", json={"feature": feature, "reason": reason})
+        return _parse(
+            StatusResult,
+            self._post("/support/request-access", json={"feature": feature, "reason": reason}),
+        )
 
     def list_messages(
         self, *, limit: int = 20, next: str | None = None
@@ -34,9 +37,12 @@ class Support(SyncResource):
 class AsyncSupport(AsyncResource):
     """Asynchronous support client (4 endpoints)."""
 
-    async def request_access(self, *, feature: str, reason: str | None = None) -> dict[str, Any]:
-        return await self._post(
-            "/support/request-access", json={"feature": feature, "reason": reason}
+    async def request_access(self, *, feature: str, reason: str | None = None) -> StatusResult:
+        return _parse(
+            StatusResult,
+            await self._post(
+                "/support/request-access", json={"feature": feature, "reason": reason}
+            ),
         )
 
     async def list_messages(

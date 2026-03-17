@@ -16,16 +16,22 @@ from dual_sdk import (
     PaginatedResponse,
 )
 from dual_sdk.models import (
+    AcceptInvitationResult,
     ApiKey,
+    Balance,
+    BalanceTransaction,
     Face,
     FileRecord,
     Object,
+    ObjectCount,
     Organization,
     PublicStats,
+    StatusResult,
     Template,
     TokenPair,
     Wallet,
     Webhook,
+    WebhookTestResult,
 )
 
 
@@ -486,6 +492,123 @@ class TestStorage:
         assert record.id == "file_4"
         req = httpx_mock.get_requests()[0]
         assert "/storage/template/tmpl_abc" in str(req.url)
+
+
+# ── Typed Returns (new models) ─────────────────────────────
+
+
+class TestObjectCount:
+    def test_count_returns_typed(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(json={"count": 42})
+        result = client.objects.count({"template_id": "t_1"})
+        assert isinstance(result, ObjectCount)
+        assert result.count == 42
+
+
+class TestOrgBalance:
+    def test_balance_returns_typed(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(json={"currency": "USD", "amount": "100.00", "available": "80.00"})
+        bal = client.organizations.balance("org_1")
+        assert isinstance(bal, Balance)
+        assert bal.currency == "USD"
+        assert bal.amount == "100.00"
+        assert bal.available == "80.00"
+
+    def test_balance_history_returns_paginated(
+        self, httpx_mock: HTTPXMock, client: DualClient
+    ) -> None:
+        httpx_mock.add_response(
+            json={
+                "items": [
+                    {"id": "tx_1", "amount": "50.00", "currency": "USD", "type": "credit"},
+                ],
+                "next": "cursor_123",
+            }
+        )
+        result = client.organizations.balance_history("org_1")
+        assert isinstance(result, PaginatedResponse)
+        assert len(result.items) == 1
+        assert isinstance(result.items[0], BalanceTransaction)
+        assert result.items[0].amount == "50.00"
+        assert result.cursor == "cursor_123"
+
+
+class TestAcceptInvitation:
+    def test_accept_returns_typed(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(
+            json={"organization_id": "org_1", "member_id": "m_1", "status": "accepted"}
+        )
+        result = client.organizations.accept_invitation("inv_1")
+        assert isinstance(result, AcceptInvitationResult)
+        assert result.organization_id == "org_1"
+        assert result.status == "accepted"
+
+
+class TestWebhookTest:
+    def test_test_returns_typed(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(json={"success": True, "status_code": 200, "response_body": "OK"})
+        result = client.webhooks.test("wh_1")
+        assert isinstance(result, WebhookTestResult)
+        assert result.success is True
+        assert result.status_code == 200
+
+
+class TestStatusResultReturns:
+    def test_request_reset_code(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(json={"success": True, "message": "Code sent"})
+        result = client.wallets.request_reset_code("user@example.com")
+        assert isinstance(result, StatusResult)
+        assert result.success is True
+        assert result.message == "Code sent"
+
+    def test_verify_reset_code(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(json={"success": True, "message": "Password updated"})
+        result = client.wallets.verify_reset_code("123456", "newpass")
+        assert isinstance(result, StatusResult)
+        assert result.success is True
+
+    def test_support_request_access(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(json={"success": True, "message": "Request submitted"})
+        result = client.support.request_access(feature="beta")
+        assert isinstance(result, StatusResult)
+        assert result.success is True
+
+
+# ── Retry-After HTTP-date parsing ──────────────────────────
+
+
+class TestRetryAfterHttpDate:
+    def test_retry_after_seconds(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(
+            status_code=429, json={"message": "Rate limited"}, headers={"retry-after": "120"}
+        )
+        with pytest.raises(DualRateLimitError) as exc_info:
+            client.wallets.me()
+        assert exc_info.value.retry_after == 120.0
+
+    def test_retry_after_http_date(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(
+            status_code=429,
+            json={"message": "Rate limited"},
+            headers={"retry-after": "Sun, 06 Nov 2094 08:49:37 GMT"},
+        )
+        with pytest.raises(DualRateLimitError) as exc_info:
+            client.wallets.me()
+        # A date far in the future should produce a positive retry_after value
+        assert exc_info.value.retry_after is not None
+        assert exc_info.value.retry_after > 0
+
+    def test_retry_after_invalid_falls_back_to_none(
+        self, httpx_mock: HTTPXMock, client: DualClient
+    ) -> None:
+        httpx_mock.add_response(
+            status_code=429,
+            json={"message": "Rate limited"},
+            headers={"retry-after": "not-a-date-or-number"},
+        )
+        with pytest.raises(DualRateLimitError) as exc_info:
+            client.wallets.me()
+        assert exc_info.value.retry_after is None
 
 
 # ── User-Agent Header ──────────────────────────────────────
