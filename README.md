@@ -25,10 +25,14 @@ wallet = client.wallets.me()
 templates = client.templates.list(limit=20)
 
 # Create an object from a template
+from dual_sdk import CreateObjectRequest
+
 obj = client.objects.create(
-    template_id="tmpl_abc123",
-    properties={"name": "My First Token"}
+    CreateObjectRequest(template_id="tmpl_abc123", properties={"name": "My First Token"})
 )
+
+# Or pass a plain dict — both work
+obj = client.objects.create({"template_id": "tmpl_abc123", "properties": {"name": "My Token"}})
 ```
 
 ## Async Support

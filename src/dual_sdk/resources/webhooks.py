@@ -5,7 +5,13 @@ from __future__ import annotations
 from typing import Any
 
 from dual_sdk._base import AsyncResource, SyncResource, _parse
-from dual_sdk.models import PaginatedResponse, Webhook, WebhookTestResult
+from dual_sdk.models import (
+    CreateWebhookRequest,
+    PaginatedResponse,
+    UpdateWebhookRequest,
+    Webhook,
+    WebhookTestResult,
+)
 
 
 class Webhooks(SyncResource):
@@ -16,19 +22,29 @@ class Webhooks(SyncResource):
         data = self._get("/webhooks", params={"limit": limit, "next": next})
         return _parse(PaginatedResponse[Webhook], data)
 
-    def create(self, *, url: str, events: list[str], **fields: Any) -> Webhook:
-        """Create a new webhook subscription."""
-        return _parse(
-            Webhook, self._post("/webhooks", json={"url": url, "events": events, **fields})
+    def create(self, body: CreateWebhookRequest | dict[str, Any]) -> Webhook:
+        """Create a new webhook subscription.
+
+        Accepts a :class:`CreateWebhookRequest` or a plain dict.
+        """
+        payload = (
+            body.model_dump(exclude_none=True) if isinstance(body, CreateWebhookRequest) else body
         )
+        return _parse(Webhook, self._post("/webhooks", json=payload))
 
     def get(self, webhook_id: str) -> Webhook:
         """Get a webhook by ID."""
         return _parse(Webhook, self._get(f"/webhooks/{webhook_id}"))
 
-    def update(self, webhook_id: str, **fields: Any) -> Webhook:
-        """Update a webhook."""
-        return _parse(Webhook, self._patch(f"/webhooks/{webhook_id}", json=fields))
+    def update(self, webhook_id: str, body: UpdateWebhookRequest | dict[str, Any]) -> Webhook:
+        """Update a webhook.
+
+        Accepts an :class:`UpdateWebhookRequest` or a plain dict.
+        """
+        payload = (
+            body.model_dump(exclude_none=True) if isinstance(body, UpdateWebhookRequest) else body
+        )
+        return _parse(Webhook, self._patch(f"/webhooks/{webhook_id}", json=payload))
 
     def delete(self, webhook_id: str) -> None:
         """Delete a webhook."""
@@ -46,16 +62,20 @@ class AsyncWebhooks(AsyncResource):
         data = await self._get("/webhooks", params={"limit": limit, "next": next})
         return _parse(PaginatedResponse[Webhook], data)
 
-    async def create(self, *, url: str, events: list[str], **fields: Any) -> Webhook:
-        return _parse(
-            Webhook, await self._post("/webhooks", json={"url": url, "events": events, **fields})
+    async def create(self, body: CreateWebhookRequest | dict[str, Any]) -> Webhook:
+        payload = (
+            body.model_dump(exclude_none=True) if isinstance(body, CreateWebhookRequest) else body
         )
+        return _parse(Webhook, await self._post("/webhooks", json=payload))
 
     async def get(self, webhook_id: str) -> Webhook:
         return _parse(Webhook, await self._get(f"/webhooks/{webhook_id}"))
 
-    async def update(self, webhook_id: str, **fields: Any) -> Webhook:
-        return _parse(Webhook, await self._patch(f"/webhooks/{webhook_id}", json=fields))
+    async def update(self, webhook_id: str, body: UpdateWebhookRequest | dict[str, Any]) -> Webhook:
+        payload = (
+            body.model_dump(exclude_none=True) if isinstance(body, UpdateWebhookRequest) else body
+        )
+        return _parse(Webhook, await self._patch(f"/webhooks/{webhook_id}", json=payload))
 
     async def delete(self, webhook_id: str) -> None:
         await self._delete(f"/webhooks/{webhook_id}")

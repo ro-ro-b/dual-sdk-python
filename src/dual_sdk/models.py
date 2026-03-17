@@ -280,3 +280,69 @@ class PublicStats(_BaseModel):
     total_templates: Optional[int] = None
     total_objects: Optional[int] = None
     total_organizations: Optional[int] = None
+
+
+# ── Request Models ────────────────────────────────────────
+
+
+class ObjectQuery(_BaseModel):
+    """Query filter for ``objects.search()`` and ``objects.count()``.
+
+    Pass structured filters rather than raw dicts.  Unknown fields
+    are forwarded to the API thanks to ``extra="allow"``.
+    """
+
+    template_id: Optional[str] = None
+    owner_id: Optional[str] = None
+    properties: Optional[Dict[str, Any]] = None
+    limit: Optional[int] = None
+    next: Optional[str] = None
+
+
+class CreateObjectRequest(_BaseModel):
+    """Payload for ``objects.create()``."""
+
+    template_id: str
+    properties: Dict[str, Any] = Field(default_factory=dict)
+    owner_id: Optional[str] = None
+
+
+class UpdateObjectRequest(_BaseModel):
+    """Payload for ``objects.update()``."""
+
+    properties: Optional[Dict[str, Any]] = None
+    owner_id: Optional[str] = None
+
+
+class CreateTemplateRequest(_BaseModel):
+    """Payload for ``templates.create()``."""
+
+    name: str
+    description: Optional[str] = None
+    properties: Optional[Dict[str, Any]] = None
+
+
+class UpdateTemplateRequest(_BaseModel):
+    """Payload for ``templates.update()``."""
+
+    name: Optional[str] = None
+    description: Optional[str] = None
+    properties: Optional[Dict[str, Any]] = None
+
+
+class CreateWebhookRequest(_BaseModel):
+    """Payload for ``webhooks.create()``."""
+
+    url: str
+    events: List[str]
+    secret: Optional[str] = None
+    active: bool = True
+
+
+class UpdateWebhookRequest(_BaseModel):
+    """Payload for ``webhooks.update()``."""
+
+    url: Optional[str] = None
+    events: Optional[List[str]] = None
+    secret: Optional[str] = None
+    active: Optional[bool] = None

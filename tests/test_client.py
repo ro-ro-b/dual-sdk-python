@@ -20,15 +20,20 @@ from dual_sdk.models import (
     ApiKey,
     Balance,
     BalanceTransaction,
+    CreateObjectRequest,
+    CreateTemplateRequest,
+    CreateWebhookRequest,
     Face,
     FileRecord,
     Object,
     ObjectCount,
+    ObjectQuery,
     Organization,
     PublicStats,
     StatusResult,
     Template,
     TokenPair,
+    UpdateWebhookRequest,
     Wallet,
     Webhook,
     WebhookTestResult,
@@ -155,7 +160,7 @@ class TestTemplates:
 
     def test_create_returns_template(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
         httpx_mock.add_response(json={"id": "t_new", "name": "Test Template"})
-        tmpl = client.templates.create(name="Test Template")
+        tmpl = client.templates.create(CreateTemplateRequest(name="Test Template"))
         assert isinstance(tmpl, Template)
         assert tmpl.name == "Test Template"
 
@@ -177,7 +182,9 @@ class TestTemplates:
 class TestObjects:
     def test_create_returns_object(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
         httpx_mock.add_response(json={"id": "o_1", "template_id": "t_1"})
-        obj = client.objects.create(template_id="t_1", properties={"name": "Token"})
+        obj = client.objects.create(
+            CreateObjectRequest(template_id="t_1", properties={"name": "Token"})
+        )
         assert isinstance(obj, Object)
         assert obj.template_id == "t_1"
 
@@ -237,7 +244,9 @@ class TestWebhooks:
         httpx_mock.add_response(
             json={"id": "wh_1", "url": "https://example.com/hook", "events": ["object.created"]},
         )
-        wh = client.webhooks.create(url="https://example.com/hook", events=["object.created"])
+        wh = client.webhooks.create(
+            CreateWebhookRequest(url="https://example.com/hook", events=["object.created"])
+        )
         assert isinstance(wh, Webhook)
         assert wh.url == "https://example.com/hook"
 
@@ -572,6 +581,40 @@ class TestStatusResultReturns:
         result = client.support.request_access(feature="beta")
         assert isinstance(result, StatusResult)
         assert result.success is True
+
+
+# ── Request Models ─────────────────────────────────────────
+
+
+class TestRequestModels:
+    def test_object_query_with_model(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(json={"count": 5})
+        result = client.objects.count(ObjectQuery(template_id="t_1"))
+        assert isinstance(result, ObjectCount)
+        assert result.count == 5
+
+    def test_object_query_with_dict(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(json={"count": 3})
+        result = client.objects.count({"template_id": "t_1"})
+        assert isinstance(result, ObjectCount)
+
+    def test_create_object_with_dict(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(json={"id": "o_2", "template_id": "t_1"})
+        obj = client.objects.create({"template_id": "t_1", "properties": {"x": 1}})
+        assert isinstance(obj, Object)
+
+    def test_create_webhook_with_dict(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(
+            json={"id": "wh_2", "url": "https://x.com/hook", "events": ["object.created"]}
+        )
+        wh = client.webhooks.create({"url": "https://x.com/hook", "events": ["object.created"]})
+        assert isinstance(wh, Webhook)
+
+    def test_update_webhook_with_model(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(json={"id": "wh_1", "url": "https://new.com/hook", "events": []})
+        wh = client.webhooks.update("wh_1", UpdateWebhookRequest(url="https://new.com/hook"))
+        assert isinstance(wh, Webhook)
+        assert wh.url == "https://new.com/hook"
 
 
 # ── Retry-After HTTP-date parsing ──────────────────────────

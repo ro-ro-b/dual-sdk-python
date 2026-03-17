@@ -5,7 +5,13 @@ from __future__ import annotations
 from typing import Any
 
 from dual_sdk._base import AsyncResource, SyncResource, _parse
-from dual_sdk.models import PaginatedResponse, Template, Variation
+from dual_sdk.models import (
+    CreateTemplateRequest,
+    PaginatedResponse,
+    Template,
+    UpdateTemplateRequest,
+    Variation,
+)
 
 
 class Templates(SyncResource):
@@ -18,17 +24,29 @@ class Templates(SyncResource):
         data = self._get("/templates", params={"limit": limit, "next": next, **params})
         return _parse(PaginatedResponse[Template], data)
 
-    def create(self, *, name: str, **fields: Any) -> Template:
-        """Create a new template."""
-        return _parse(Template, self._post("/templates", json={"name": name, **fields}))
+    def create(self, body: CreateTemplateRequest | dict[str, Any]) -> Template:
+        """Create a new template.
+
+        Accepts a :class:`CreateTemplateRequest` or a plain dict.
+        """
+        payload = (
+            body.model_dump(exclude_none=True) if isinstance(body, CreateTemplateRequest) else body
+        )
+        return _parse(Template, self._post("/templates", json=payload))
 
     def get(self, template_id: str) -> Template:
         """Get a template by ID."""
         return _parse(Template, self._get(f"/templates/{template_id}"))
 
-    def update(self, template_id: str, **fields: Any) -> Template:
-        """Update an existing template."""
-        return _parse(Template, self._patch(f"/templates/{template_id}", json=fields))
+    def update(self, template_id: str, body: UpdateTemplateRequest | dict[str, Any]) -> Template:
+        """Update an existing template.
+
+        Accepts an :class:`UpdateTemplateRequest` or a plain dict.
+        """
+        payload = (
+            body.model_dump(exclude_none=True) if isinstance(body, UpdateTemplateRequest) else body
+        )
+        return _parse(Template, self._patch(f"/templates/{template_id}", json=payload))
 
     def delete(self, template_id: str) -> None:
         """Delete a template."""
@@ -43,11 +61,11 @@ class Templates(SyncResource):
         )
         return _parse(PaginatedResponse[Variation], data)
 
-    def create_variation(self, template_id: str, *, name: str, **fields: Any) -> Variation:
+    def create_variation(self, template_id: str, body: dict[str, Any]) -> Variation:
         """Create a variation on a template."""
         return _parse(
             Variation,
-            self._post(f"/templates/{template_id}/variations", json={"name": name, **fields}),
+            self._post(f"/templates/{template_id}/variations", json=body),
         )
 
 
@@ -60,14 +78,22 @@ class AsyncTemplates(AsyncResource):
         data = await self._get("/templates", params={"limit": limit, "next": next, **params})
         return _parse(PaginatedResponse[Template], data)
 
-    async def create(self, *, name: str, **fields: Any) -> Template:
-        return _parse(Template, await self._post("/templates", json={"name": name, **fields}))
+    async def create(self, body: CreateTemplateRequest | dict[str, Any]) -> Template:
+        payload = (
+            body.model_dump(exclude_none=True) if isinstance(body, CreateTemplateRequest) else body
+        )
+        return _parse(Template, await self._post("/templates", json=payload))
 
     async def get(self, template_id: str) -> Template:
         return _parse(Template, await self._get(f"/templates/{template_id}"))
 
-    async def update(self, template_id: str, **fields: Any) -> Template:
-        return _parse(Template, await self._patch(f"/templates/{template_id}", json=fields))
+    async def update(
+        self, template_id: str, body: UpdateTemplateRequest | dict[str, Any]
+    ) -> Template:
+        payload = (
+            body.model_dump(exclude_none=True) if isinstance(body, UpdateTemplateRequest) else body
+        )
+        return _parse(Template, await self._patch(f"/templates/{template_id}", json=payload))
 
     async def delete(self, template_id: str) -> None:
         await self._delete(f"/templates/{template_id}")
@@ -80,8 +106,8 @@ class AsyncTemplates(AsyncResource):
         )
         return _parse(PaginatedResponse[Variation], data)
 
-    async def create_variation(self, template_id: str, *, name: str, **fields: Any) -> Variation:
+    async def create_variation(self, template_id: str, body: dict[str, Any]) -> Variation:
         return _parse(
             Variation,
-            await self._post(f"/templates/{template_id}/variations", json={"name": name, **fields}),
+            await self._post(f"/templates/{template_id}/variations", json=body),
         )
