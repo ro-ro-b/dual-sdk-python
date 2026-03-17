@@ -22,7 +22,10 @@ class Wallets(SyncResource):
 
     def register(self, email: str, password: str, **kwargs: Any) -> TokenPair:
         """Register a new wallet."""
-        return _parse(TokenPair, self._post("/wallets/register", json={"email": email, "password": password, **kwargs}))
+        return _parse(
+            TokenPair,
+            self._post("/wallets/register", json={"email": email, "password": password, **kwargs}),
+        )
 
     def verify_registration(self, token: str) -> TokenPair:
         """Verify registration with confirmation token."""
@@ -34,7 +37,9 @@ class Wallets(SyncResource):
 
     def verify_reset_code(self, code: str, new_password: str) -> dict[str, Any]:
         """Verify reset code and set new password."""
-        return self._post("/wallets/reset-code/verify", json={"code": code, "new_password": new_password})
+        return self._post(
+            "/wallets/reset-code/verify", json={"code": code, "new_password": new_password}
+        )
 
     def me(self) -> Wallet:
         """Get the current authenticated wallet."""
@@ -53,7 +58,13 @@ class Wallets(SyncResource):
         data = self._get("/wallets/me/linked")
         if isinstance(data, dict):
             data = data.get("payload", data)
-        items = data if isinstance(data, list) else data.get("items", []) if isinstance(data, dict) else []
+        items = (
+            data
+            if isinstance(data, list)
+            else data.get("items", [])
+            if isinstance(data, dict)
+            else []
+        )
         return [Wallet.model_validate(w) for w in items]
 
     def get(self, wallet_id: str) -> Wallet:
@@ -65,7 +76,13 @@ class Wallets(SyncResource):
         data = self._get(f"/wallets/{wallet_id}/linked")
         if isinstance(data, dict):
             data = data.get("payload", data)
-        items = data if isinstance(data, list) else data.get("items", []) if isinstance(data, dict) else []
+        items = (
+            data
+            if isinstance(data, list)
+            else data.get("items", [])
+            if isinstance(data, dict)
+            else []
+        )
         return [Wallet.model_validate(w) for w in items]
 
     def link(self, **kwargs: Any) -> Wallet:
@@ -74,7 +91,9 @@ class Wallets(SyncResource):
 
     def refresh_token(self, refresh_token: str) -> TokenPair:
         """Refresh the access token."""
-        return _parse(TokenPair, self._post("/wallets/token/refresh", json={"refresh_token": refresh_token}))
+        return _parse(
+            TokenPair, self._post("/wallets/token/refresh", json={"refresh_token": refresh_token})
+        )
 
 
 class AsyncWallets(AsyncResource):
@@ -91,11 +110,18 @@ class AsyncWallets(AsyncResource):
 
     async def register(self, email: str, password: str, **kwargs: Any) -> TokenPair:
         """Register a new wallet."""
-        return _parse(TokenPair, await self._post("/wallets/register", json={"email": email, "password": password, **kwargs}))
+        return _parse(
+            TokenPair,
+            await self._post(
+                "/wallets/register", json={"email": email, "password": password, **kwargs}
+            ),
+        )
 
     async def verify_registration(self, token: str) -> TokenPair:
         """Verify registration with confirmation token."""
-        return _parse(TokenPair, await self._post("/wallets/register/verify", json={"token": token}))
+        return _parse(
+            TokenPair, await self._post("/wallets/register/verify", json={"token": token})
+        )
 
     async def request_reset_code(self, email: str) -> dict[str, Any]:
         """Request a password reset code."""
@@ -103,7 +129,9 @@ class AsyncWallets(AsyncResource):
 
     async def verify_reset_code(self, code: str, new_password: str) -> dict[str, Any]:
         """Verify reset code and set new password."""
-        return await self._post("/wallets/reset-code/verify", json={"code": code, "new_password": new_password})
+        return await self._post(
+            "/wallets/reset-code/verify", json={"code": code, "new_password": new_password}
+        )
 
     async def me(self) -> Wallet:
         """Get the current authenticated wallet."""
@@ -122,7 +150,13 @@ class AsyncWallets(AsyncResource):
         data = await self._get("/wallets/me/linked")
         if isinstance(data, dict):
             data = data.get("payload", data)
-        items = data if isinstance(data, list) else data.get("items", []) if isinstance(data, dict) else []
+        items = (
+            data
+            if isinstance(data, list)
+            else data.get("items", [])
+            if isinstance(data, dict)
+            else []
+        )
         return [Wallet.model_validate(w) for w in items]
 
     async def get(self, wallet_id: str) -> Wallet:
@@ -134,7 +168,13 @@ class AsyncWallets(AsyncResource):
         data = await self._get(f"/wallets/{wallet_id}/linked")
         if isinstance(data, dict):
             data = data.get("payload", data)
-        items = data if isinstance(data, list) else data.get("items", []) if isinstance(data, dict) else []
+        items = (
+            data
+            if isinstance(data, list)
+            else data.get("items", [])
+            if isinstance(data, dict)
+            else []
+        )
         return [Wallet.model_validate(w) for w in items]
 
     async def link(self, **kwargs: Any) -> Wallet:
@@ -143,4 +183,7 @@ class AsyncWallets(AsyncResource):
 
     async def refresh_token(self, refresh_token: str) -> TokenPair:
         """Refresh the access token."""
-        return _parse(TokenPair, await self._post("/wallets/token/refresh", json={"refresh_token": refresh_token}))
+        return _parse(
+            TokenPair,
+            await self._post("/wallets/token/refresh", json={"refresh_token": refresh_token}),
+        )

@@ -16,7 +16,9 @@ class Storage(SyncResource):
         data: dict[str, Any] = {}
         if template_id is not None:
             data["template_id"] = template_id
-        return _parse(FileRecord, self._post("/storage/upload", files={"file": file}, data=data or None))
+        return _parse(
+            FileRecord, self._post("/storage/upload", files={"file": file}, data=data or None)
+        )
 
     def get(self, file_id: str) -> FileRecord:
         """Get file metadata by ID."""
@@ -32,7 +34,9 @@ class Storage(SyncResource):
 
     def upload_template_asset(self, template_id: str, *, file: Any) -> FileRecord:
         """Upload an asset for a template."""
-        return _parse(FileRecord, self._post(f"/storage/template/{template_id}", files={"file": file}))
+        return _parse(
+            FileRecord, self._post(f"/storage/template/{template_id}", files={"file": file})
+        )
 
 
 class AsyncStorage(AsyncResource):
@@ -42,7 +46,9 @@ class AsyncStorage(AsyncResource):
         data: dict[str, Any] = {}
         if template_id is not None:
             data["template_id"] = template_id
-        return _parse(FileRecord, await self._post("/storage/upload", files={"file": file}, data=data or None))
+        return _parse(
+            FileRecord, await self._post("/storage/upload", files={"file": file}, data=data or None)
+        )
 
     async def get(self, file_id: str) -> FileRecord:
         return _parse(FileRecord, await self._get(f"/storage/{file_id}"))
@@ -54,4 +60,6 @@ class AsyncStorage(AsyncResource):
         return _parse_list(FileRecord, await self._get(f"/storage/template/{template_id}"))
 
     async def upload_template_asset(self, template_id: str, *, file: Any) -> FileRecord:
-        return _parse(FileRecord, await self._post(f"/storage/template/{template_id}", files={"file": file}))
+        return _parse(
+            FileRecord, await self._post(f"/storage/template/{template_id}", files={"file": file})
+        )

@@ -18,7 +18,9 @@ class Webhooks(SyncResource):
 
     def create(self, *, url: str, events: list[str], **fields: Any) -> Webhook:
         """Create a new webhook subscription."""
-        return _parse(Webhook, self._post("/webhooks", json={"url": url, "events": events, **fields}))
+        return _parse(
+            Webhook, self._post("/webhooks", json={"url": url, "events": events, **fields})
+        )
 
     def get(self, webhook_id: str) -> Webhook:
         """Get a webhook by ID."""
@@ -45,7 +47,9 @@ class AsyncWebhooks(AsyncResource):
         return _parse(PaginatedResponse[Webhook], data)
 
     async def create(self, *, url: str, events: list[str], **fields: Any) -> Webhook:
-        return _parse(Webhook, await self._post("/webhooks", json={"url": url, "events": events, **fields}))
+        return _parse(
+            Webhook, await self._post("/webhooks", json={"url": url, "events": events, **fields})
+        )
 
     async def get(self, webhook_id: str) -> Webhook:
         return _parse(Webhook, await self._get(f"/webhooks/{webhook_id}"))

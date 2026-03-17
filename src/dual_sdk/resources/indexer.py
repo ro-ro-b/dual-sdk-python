@@ -45,7 +45,9 @@ class Indexer(SyncResource):
 class AsyncIndexer(AsyncResource):
     """Asynchronous indexer client (7 endpoints)."""
 
-    async def templates(self, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[Template]:
+    async def templates(
+        self, *, limit: int = 20, next: str | None = None
+    ) -> PaginatedResponse[Template]:
         data = await self._get("/public/templates", params={"limit": limit, "next": next})
         return _parse(PaginatedResponse[Template], data)
 

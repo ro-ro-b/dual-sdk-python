@@ -18,7 +18,9 @@ class Sequencer(SyncResource):
         """Get a batch by ID."""
         return _parse(Batch, self._get(f"/batches/{batch_id}"))
 
-    def list_checkpoints(self, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[Checkpoint]:
+    def list_checkpoints(
+        self, *, limit: int = 20, next: str | None = None
+    ) -> PaginatedResponse[Checkpoint]:
         """List checkpoints with cursor pagination."""
         data = self._get("/checkpoints", params={"limit": limit, "next": next})
         return _parse(PaginatedResponse[Checkpoint], data)
@@ -31,14 +33,18 @@ class Sequencer(SyncResource):
 class AsyncSequencer(AsyncResource):
     """Asynchronous sequencer client (4 endpoints)."""
 
-    async def list_batches(self, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[Batch]:
+    async def list_batches(
+        self, *, limit: int = 20, next: str | None = None
+    ) -> PaginatedResponse[Batch]:
         data = await self._get("/batches", params={"limit": limit, "next": next})
         return _parse(PaginatedResponse[Batch], data)
 
     async def get_batch(self, batch_id: str) -> Batch:
         return _parse(Batch, await self._get(f"/batches/{batch_id}"))
 
-    async def list_checkpoints(self, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[Checkpoint]:
+    async def list_checkpoints(
+        self, *, limit: int = 20, next: str | None = None
+    ) -> PaginatedResponse[Checkpoint]:
         data = await self._get("/checkpoints", params={"limit": limit, "next": next})
         return _parse(PaginatedResponse[Checkpoint], data)
 

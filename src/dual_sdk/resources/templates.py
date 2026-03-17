@@ -11,7 +11,9 @@ from dual_sdk.models import PaginatedResponse, Template, Variation
 class Templates(SyncResource):
     """Synchronous templates client (7 endpoints)."""
 
-    def list(self, *, limit: int = 20, next: str | None = None, **params: Any) -> PaginatedResponse[Template]:
+    def list(
+        self, *, limit: int = 20, next: str | None = None, **params: Any
+    ) -> PaginatedResponse[Template]:
         """List templates with cursor pagination."""
         data = self._get("/templates", params={"limit": limit, "next": next, **params})
         return _parse(PaginatedResponse[Template], data)
@@ -32,20 +34,29 @@ class Templates(SyncResource):
         """Delete a template."""
         self._delete(f"/templates/{template_id}")
 
-    def list_variations(self, template_id: str, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[Variation]:
+    def list_variations(
+        self, template_id: str, *, limit: int = 20, next: str | None = None
+    ) -> PaginatedResponse[Variation]:
         """List variations for a template."""
-        data = self._get(f"/templates/{template_id}/variations", params={"limit": limit, "next": next})
+        data = self._get(
+            f"/templates/{template_id}/variations", params={"limit": limit, "next": next}
+        )
         return _parse(PaginatedResponse[Variation], data)
 
     def create_variation(self, template_id: str, *, name: str, **fields: Any) -> Variation:
         """Create a variation on a template."""
-        return _parse(Variation, self._post(f"/templates/{template_id}/variations", json={"name": name, **fields}))
+        return _parse(
+            Variation,
+            self._post(f"/templates/{template_id}/variations", json={"name": name, **fields}),
+        )
 
 
 class AsyncTemplates(AsyncResource):
     """Asynchronous templates client (7 endpoints)."""
 
-    async def list(self, *, limit: int = 20, next: str | None = None, **params: Any) -> PaginatedResponse[Template]:
+    async def list(
+        self, *, limit: int = 20, next: str | None = None, **params: Any
+    ) -> PaginatedResponse[Template]:
         data = await self._get("/templates", params={"limit": limit, "next": next, **params})
         return _parse(PaginatedResponse[Template], data)
 
@@ -61,9 +72,16 @@ class AsyncTemplates(AsyncResource):
     async def delete(self, template_id: str) -> None:
         await self._delete(f"/templates/{template_id}")
 
-    async def list_variations(self, template_id: str, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[Variation]:
-        data = await self._get(f"/templates/{template_id}/variations", params={"limit": limit, "next": next})
+    async def list_variations(
+        self, template_id: str, *, limit: int = 20, next: str | None = None
+    ) -> PaginatedResponse[Variation]:
+        data = await self._get(
+            f"/templates/{template_id}/variations", params={"limit": limit, "next": next}
+        )
         return _parse(PaginatedResponse[Variation], data)
 
     async def create_variation(self, template_id: str, *, name: str, **fields: Any) -> Variation:
-        return _parse(Variation, await self._post(f"/templates/{template_id}/variations", json={"name": name, **fields}))
+        return _parse(
+            Variation,
+            await self._post(f"/templates/{template_id}/variations", json={"name": name, **fields}),
+        )

@@ -15,7 +15,9 @@ class Support(SyncResource):
         """Request access to a feature."""
         return self._post("/support/request-access", json={"feature": feature, "reason": reason})
 
-    def list_messages(self, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[SupportMessage]:
+    def list_messages(
+        self, *, limit: int = 20, next: str | None = None
+    ) -> PaginatedResponse[SupportMessage]:
         """List support messages with cursor pagination."""
         data = self._get("/support", params={"limit": limit, "next": next})
         return _parse(PaginatedResponse[SupportMessage], data)
@@ -33,14 +35,20 @@ class AsyncSupport(AsyncResource):
     """Asynchronous support client (4 endpoints)."""
 
     async def request_access(self, *, feature: str, reason: str | None = None) -> dict[str, Any]:
-        return await self._post("/support/request-access", json={"feature": feature, "reason": reason})
+        return await self._post(
+            "/support/request-access", json={"feature": feature, "reason": reason}
+        )
 
-    async def list_messages(self, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[SupportMessage]:
+    async def list_messages(
+        self, *, limit: int = 20, next: str | None = None
+    ) -> PaginatedResponse[SupportMessage]:
         data = await self._get("/support", params={"limit": limit, "next": next})
         return _parse(PaginatedResponse[SupportMessage], data)
 
     async def send_message(self, *, content: str, **fields: Any) -> SupportMessage:
-        return _parse(SupportMessage, await self._post("/support", json={"content": content, **fields}))
+        return _parse(
+            SupportMessage, await self._post("/support", json={"content": content, **fields})
+        )
 
     async def get_message(self, message_id: str) -> SupportMessage:
         return _parse(SupportMessage, await self._get(f"/support/{message_id}"))

@@ -3,14 +3,11 @@
 from __future__ import annotations
 
 import pytest
-import httpx
-from pytest_httpx import HTTPXMock
-
 from dual_sdk import (
     AsyncDualClient,
     AuthMode,
-    DualClient,
     DualAuthError,
+    DualClient,
     DualError,
     DualNotFoundError,
     DualRateLimitError,
@@ -28,6 +25,7 @@ from dual_sdk.models import (
     Wallet,
     Webhook,
 )
+from pytest_httpx import HTTPXMock
 
 
 @pytest.fixture
@@ -51,10 +49,20 @@ def bearer_client() -> DualClient:
 class TestClientInit:
     def test_has_all_modules(self, client: DualClient) -> None:
         modules = [
-            "wallets", "templates", "objects", "organizations",
-            "payments", "storage", "webhooks", "notifications",
-            "event_bus", "faces", "sequencer", "indexer",
-            "api_keys", "support",
+            "wallets",
+            "templates",
+            "objects",
+            "organizations",
+            "payments",
+            "storage",
+            "webhooks",
+            "notifications",
+            "event_bus",
+            "faces",
+            "sequencer",
+            "indexer",
+            "api_keys",
+            "support",
         ]
         for mod in modules:
             assert hasattr(client, mod), f"Missing module: {mod}"
@@ -72,7 +80,9 @@ class TestClientInit:
         req = httpx_mock.get_requests()[0]
         assert req.headers.get("x-api-key") == "test-key"
 
-    def test_auth_mode_bearer_header(self, httpx_mock: HTTPXMock, bearer_client: DualClient) -> None:
+    def test_auth_mode_bearer_header(
+        self, httpx_mock: HTTPXMock, bearer_client: DualClient
+    ) -> None:
         httpx_mock.add_response(json={"id": "w_1", "email": "a@b.com"})
         bearer_client.wallets.me()
         req = httpx_mock.get_requests()[0]
@@ -117,7 +127,10 @@ class TestWallets:
 class TestTemplates:
     def test_list_returns_paginated(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
         httpx_mock.add_response(
-            json={"items": [{"id": "t_1", "name": "T1"}, {"id": "t_2", "name": "T2"}], "next": "cursor_abc"},
+            json={
+                "items": [{"id": "t_1", "name": "T1"}, {"id": "t_2", "name": "T2"}],
+                "next": "cursor_abc",
+            },
         )
         result = client.templates.list()
         assert isinstance(result, PaginatedResponse)
@@ -223,7 +236,10 @@ class TestWebhooks:
 
     def test_list_returns_paginated(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
         httpx_mock.add_response(
-            json={"items": [{"id": "wh_1", "url": "https://example.com", "events": []}], "next": None},
+            json={
+                "items": [{"id": "wh_1", "url": "https://example.com", "events": []}],
+                "next": None,
+            },
         )
         result = client.webhooks.list()
         assert isinstance(result, PaginatedResponse)
@@ -264,7 +280,9 @@ class TestIndexer:
 
 class TestErrorHandling:
     def test_401_raises_auth_error(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
-        httpx_mock.add_response(status_code=401, json={"message": "Unauthorized", "code": "INVALID_TOKEN"})
+        httpx_mock.add_response(
+            status_code=401, json={"message": "Unauthorized", "code": "INVALID_TOKEN"}
+        )
         with pytest.raises(DualAuthError) as exc_info:
             client.wallets.me()
         assert exc_info.value.status == 401
@@ -276,7 +294,9 @@ class TestErrorHandling:
             client.objects.get("bad_id")
 
     def test_429_raises_rate_limit(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
-        httpx_mock.add_response(status_code=429, json={"message": "Too many requests"}, headers={"retry-after": "5"})
+        httpx_mock.add_response(
+            status_code=429, json={"message": "Too many requests"}, headers={"retry-after": "5"}
+        )
         with pytest.raises(DualRateLimitError) as exc_info:
             client.objects.list()
         assert exc_info.value.retry_after == 5.0
@@ -334,7 +354,9 @@ class TestAsyncClient:
 
     @pytest.mark.asyncio
     async def test_async_wallets_me(self, httpx_mock: HTTPXMock) -> None:
-        async with AsyncDualClient(api_key="test-key", base_url="https://test.local", max_retries=0) as client:
+        async with AsyncDualClient(
+            api_key="test-key", base_url="https://test.local", max_retries=0
+        ) as client:
             httpx_mock.add_response(json={"id": "w_async", "email": "async@test.com"})
             wallet = await client.wallets.me()
             assert isinstance(wallet, Wallet)
@@ -342,7 +364,9 @@ class TestAsyncClient:
 
     @pytest.mark.asyncio
     async def test_async_templates_list(self, httpx_mock: HTTPXMock) -> None:
-        async with AsyncDualClient(api_key="test-key", base_url="https://test.local", max_retries=0) as client:
+        async with AsyncDualClient(
+            api_key="test-key", base_url="https://test.local", max_retries=0
+        ) as client:
             httpx_mock.add_response(json={"items": [{"id": "t_1", "name": "T1"}], "next": None})
             result = await client.templates.list()
             assert isinstance(result, PaginatedResponse)
@@ -350,8 +374,12 @@ class TestAsyncClient:
 
     @pytest.mark.asyncio
     async def test_async_error_handling(self, httpx_mock: HTTPXMock) -> None:
-        async with AsyncDualClient(api_key="test-key", base_url="https://test.local", max_retries=0) as client:
-            httpx_mock.add_response(status_code=401, json={"message": "Unauthorized", "code": "INVALID_TOKEN"})
+        async with AsyncDualClient(
+            api_key="test-key", base_url="https://test.local", max_retries=0
+        ) as client:
+            httpx_mock.add_response(
+                status_code=401, json={"message": "Unauthorized", "code": "INVALID_TOKEN"}
+            )
             with pytest.raises(DualAuthError) as exc_info:
                 await client.wallets.me()
             assert exc_info.value.status == 401
@@ -359,8 +387,10 @@ class TestAsyncClient:
     @pytest.mark.asyncio
     async def test_async_bearer_auth(self, httpx_mock: HTTPXMock) -> None:
         async with AsyncDualClient(
-            api_key="jwt-token", auth_mode=AuthMode.BEARER,
-            base_url="https://test.local", max_retries=0,
+            api_key="jwt-token",
+            auth_mode=AuthMode.BEARER,
+            base_url="https://test.local",
+            max_retries=0,
         ) as client:
             httpx_mock.add_response(json={"id": "w_1", "email": "test@test.com"})
             await client.wallets.me()
@@ -393,7 +423,12 @@ class TestTypedModels:
 class TestStorage:
     def test_upload_returns_file_record(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
         httpx_mock.add_response(
-            json={"id": "file_1", "url": "https://cdn.example.com/file_1.png", "content_type": "image/png", "size": 1024},
+            json={
+                "id": "file_1",
+                "url": "https://cdn.example.com/file_1.png",
+                "content_type": "image/png",
+                "size": 1024,
+            },
         )
         record = client.storage.upload(file=("test.png", b"fake-png-data", "image/png"))
         assert isinstance(record, FileRecord)
@@ -430,7 +465,12 @@ class TestStorage:
         assert result is None
 
     def test_template_assets_returns_list(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
-        httpx_mock.add_response(json=[{"id": "file_1", "url": "https://cdn.example.com/a.png"}, {"id": "file_2", "url": "https://cdn.example.com/b.png"}])
+        httpx_mock.add_response(
+            json=[
+                {"id": "file_1", "url": "https://cdn.example.com/a.png"},
+                {"id": "file_2", "url": "https://cdn.example.com/b.png"},
+            ]
+        )
         assets = client.storage.template_assets("tmpl_abc")
         assert isinstance(assets, list)
         assert len(assets) == 2
@@ -438,7 +478,9 @@ class TestStorage:
 
     def test_upload_template_asset(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
         httpx_mock.add_response(json={"id": "file_4", "url": "https://cdn.example.com/asset.png"})
-        record = client.storage.upload_template_asset("tmpl_abc", file=("asset.png", b"\x89PNG", "image/png"))
+        record = client.storage.upload_template_asset(
+            "tmpl_abc", file=("asset.png", b"\x89PNG", "image/png")
+        )
         assert isinstance(record, FileRecord)
         assert record.id == "file_4"
         req = httpx_mock.get_requests()[0]

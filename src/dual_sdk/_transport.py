@@ -157,9 +157,7 @@ class Transport:
         files: Any | None = None,
     ) -> Any:
         """Execute an HTTP request with automatic retry on transient failures."""
-        req_kwargs = _prepare_request_kwargs(
-            params=params, json=json, data=data, files=files
-        )
+        req_kwargs = _prepare_request_kwargs(params=params, json=json, data=data, files=files)
         last_error: Exception | None = None
 
         for attempt in range(self._max_retries + 1):
@@ -253,9 +251,7 @@ class AsyncTransport:
         files: Any | None = None,
     ) -> Any:
         """Execute an async HTTP request with automatic retry."""
-        req_kwargs = _prepare_request_kwargs(
-            params=params, json=json, data=data, files=files
-        )
+        req_kwargs = _prepare_request_kwargs(params=params, json=json, data=data, files=files)
         last_error: Exception | None = None
 
         for attempt in range(self._max_retries + 1):

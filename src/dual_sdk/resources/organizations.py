@@ -27,12 +27,18 @@ class Organizations(SyncResource):
     def balance(self, org_id: str) -> dict[str, Any]:
         return self._get(f"/organizations/{org_id}/balance")
 
-    def balance_history(self, org_id: str, *, limit: int = 20, next: str | None = None) -> dict[str, Any]:
-        return self._get(f"/organizations/{org_id}/balance/history", params={"limit": limit, "next": next})
+    def balance_history(
+        self, org_id: str, *, limit: int = 20, next: str | None = None
+    ) -> dict[str, Any]:
+        return self._get(
+            f"/organizations/{org_id}/balance/history", params={"limit": limit, "next": next}
+        )
 
     # ── Members ──
 
-    def list_members(self, org_id: str, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[Member]:
+    def list_members(
+        self, org_id: str, *, limit: int = 20, next: str | None = None
+    ) -> PaginatedResponse[Member]:
         data = self._get(f"/organizations/{org_id}/members", params={"limit": limit, "next": next})
         return _parse(PaginatedResponse[Member], data)
 
@@ -46,7 +52,9 @@ class Organizations(SyncResource):
         self._delete(f"/organizations/{org_id}/members/{member_id}")
 
     def update_member_role(self, org_id: str, member_id: str, *, role: str) -> Member:
-        return _parse(Member, self._patch(f"/organizations/{org_id}/members/{member_id}", json={"role": role}))
+        return _parse(
+            Member, self._patch(f"/organizations/{org_id}/members/{member_id}", json={"role": role})
+        )
 
     # ── Roles ──
 
@@ -54,7 +62,13 @@ class Organizations(SyncResource):
         return _parse_list(Role, self._get(f"/organizations/{org_id}/roles"))
 
     def create_role(self, org_id: str, *, name: str, permissions: list[str] | None = None) -> Role:
-        return _parse(Role, self._post(f"/organizations/{org_id}/roles", json={"name": name, "permissions": permissions or []}))
+        return _parse(
+            Role,
+            self._post(
+                f"/organizations/{org_id}/roles",
+                json={"name": name, "permissions": permissions or []},
+            ),
+        )
 
     def update_role(self, org_id: str, role_id: str, **fields: Any) -> Role:
         return _parse(Role, self._patch(f"/organizations/{org_id}/roles/{role_id}", json=fields))
@@ -83,12 +97,16 @@ class Organizations(SyncResource):
 class AsyncOrganizations(AsyncResource):
     """Asynchronous organizations client (18 endpoints)."""
 
-    async def list(self, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[Organization]:
+    async def list(
+        self, *, limit: int = 20, next: str | None = None
+    ) -> PaginatedResponse[Organization]:
         data = await self._get("/organizations", params={"limit": limit, "next": next})
         return _parse(PaginatedResponse[Organization], data)
 
     async def create(self, *, name: str, **fields: Any) -> Organization:
-        return _parse(Organization, await self._post("/organizations", json={"name": name, **fields}))
+        return _parse(
+            Organization, await self._post("/organizations", json={"name": name, **fields})
+        )
 
     async def get(self, org_id: str) -> Organization:
         return _parse(Organization, await self._get(f"/organizations/{org_id}"))
@@ -99,11 +117,19 @@ class AsyncOrganizations(AsyncResource):
     async def balance(self, org_id: str) -> dict[str, Any]:
         return await self._get(f"/organizations/{org_id}/balance")
 
-    async def balance_history(self, org_id: str, *, limit: int = 20, next: str | None = None) -> dict[str, Any]:
-        return await self._get(f"/organizations/{org_id}/balance/history", params={"limit": limit, "next": next})
+    async def balance_history(
+        self, org_id: str, *, limit: int = 20, next: str | None = None
+    ) -> dict[str, Any]:
+        return await self._get(
+            f"/organizations/{org_id}/balance/history", params={"limit": limit, "next": next}
+        )
 
-    async def list_members(self, org_id: str, *, limit: int = 20, next: str | None = None) -> PaginatedResponse[Member]:
-        data = await self._get(f"/organizations/{org_id}/members", params={"limit": limit, "next": next})
+    async def list_members(
+        self, org_id: str, *, limit: int = 20, next: str | None = None
+    ) -> PaginatedResponse[Member]:
+        data = await self._get(
+            f"/organizations/{org_id}/members", params={"limit": limit, "next": next}
+        )
         return _parse(PaginatedResponse[Member], data)
 
     async def add_member(self, org_id: str, *, wallet_id: str, role: str | None = None) -> Member:
@@ -116,16 +142,29 @@ class AsyncOrganizations(AsyncResource):
         await self._delete(f"/organizations/{org_id}/members/{member_id}")
 
     async def update_member_role(self, org_id: str, member_id: str, *, role: str) -> Member:
-        return _parse(Member, await self._patch(f"/organizations/{org_id}/members/{member_id}", json={"role": role}))
+        return _parse(
+            Member,
+            await self._patch(f"/organizations/{org_id}/members/{member_id}", json={"role": role}),
+        )
 
     async def list_roles(self, org_id: str) -> list[Role]:
         return _parse_list(Role, await self._get(f"/organizations/{org_id}/roles"))
 
-    async def create_role(self, org_id: str, *, name: str, permissions: list[str] | None = None) -> Role:
-        return _parse(Role, await self._post(f"/organizations/{org_id}/roles", json={"name": name, "permissions": permissions or []}))
+    async def create_role(
+        self, org_id: str, *, name: str, permissions: list[str] | None = None
+    ) -> Role:
+        return _parse(
+            Role,
+            await self._post(
+                f"/organizations/{org_id}/roles",
+                json={"name": name, "permissions": permissions or []},
+            ),
+        )
 
     async def update_role(self, org_id: str, role_id: str, **fields: Any) -> Role:
-        return _parse(Role, await self._patch(f"/organizations/{org_id}/roles/{role_id}", json=fields))
+        return _parse(
+            Role, await self._patch(f"/organizations/{org_id}/roles/{role_id}", json=fields)
+        )
 
     async def delete_role(self, org_id: str, role_id: str) -> None:
         await self._delete(f"/organizations/{org_id}/roles/{role_id}")
@@ -134,7 +173,9 @@ class AsyncOrganizations(AsyncResource):
         body: dict[str, Any] = {"email": email}
         if role:
             body["role"] = role
-        return _parse(Invitation, await self._post(f"/organizations/{org_id}/invitations", json=body))
+        return _parse(
+            Invitation, await self._post(f"/organizations/{org_id}/invitations", json=body)
+        )
 
     async def list_invitations(self, org_id: str) -> list[Invitation]:
         return _parse_list(Invitation, await self._get(f"/organizations/{org_id}/invitations"))

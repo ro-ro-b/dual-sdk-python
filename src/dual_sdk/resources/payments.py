@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from dual_sdk._base import AsyncResource, SyncResource, _parse, _parse_list
 from dual_sdk.models import Deposit, PaymentConfig
 
