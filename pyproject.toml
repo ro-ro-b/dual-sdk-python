@@ -56,7 +56,7 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 known-first-party = ["dual_sdk"]
 
 [tool.ruff.lint.per-file-ignores]
-"src/dual_sdk/models.py" = ["UP006", "UP007", "UP035"]
+"src/dual_sdk/models.py" = ["UP"]  # Pydantic evaluates annotations at runtime; needs 3.9 compat
 
 [tool.mypy]
 python_version = "3.9"
