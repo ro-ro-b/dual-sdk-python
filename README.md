@@ -7,7 +7,7 @@ Covers **100 API endpoints** across **14 resource modules** with both synchronou
 ## Installation
 
 ```bash
-pip install dual-sdk
+pip install git+https://github.com/ro-ro-b/dual-sdk-python.git
 ```
 
 ## Quick Start
@@ -81,11 +81,11 @@ except DualError as e:
 | `client.objects` | 9 | Create, list, search, state management |
 | `client.organizations` | 18 | Org management, members, roles, invitations |
 | `client.payments` | 2 | Payment config, deposit listing |
-| `client.storage` | 5 | File upload, download, template assets |
+| `client.storage` | 5 | File upload, metadata, template assets |
 | `client.webhooks` | 6 | CRUD, test endpoint |
 | `client.notifications` | 7 | Messages, templates |
 | `client.event_bus` | 8 | Actions, action types, batch execution |
-| `client.faces` | 6 | Face registration, rendering |
+| `client.faces` | 6 | Face CRUD, by-template lookup |
 | `client.sequencer` | 4 | Batch submission, checkpoints |
 | `client.indexer` | 7 | Public API, stats, search |
 | `client.api_keys` | 3 | Create, list, delete keys |
@@ -93,7 +93,7 @@ except DualError as e:
 
 ## Documentation
 
-Full docs at [dual-docs-gray.vercel.app](https://dual-docs-gray.vercel.app/docs/developer-kit/sdk)
+Full docs at [dual-docs-gray.vercel.app](https://dual-docs-gray.vercel.app/docs/developer-kit/python-sdk)
 
 ## License
 

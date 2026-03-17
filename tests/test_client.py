@@ -19,6 +19,7 @@ from dual_sdk import (
 from dual_sdk.models import (
     ApiKey,
     Face,
+    FileRecord,
     Object,
     Organization,
     PublicStats,
@@ -382,3 +383,72 @@ class TestTypedModels:
         assert hasattr(result, "items")
         assert isinstance(result.items, list)
         assert all(isinstance(item, Template) for item in result.items)
+
+
+# ── Storage ─────────────────────────────────────────────────
+
+
+class TestStorage:
+    def test_upload_returns_file_record(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(
+            json={"id": "file_1", "url": "https://cdn.example.com/file_1.png", "content_type": "image/png", "size": 1024},
+        )
+        record = client.storage.upload(file=("test.png", b"fake-png-data", "image/png"))
+        assert isinstance(record, FileRecord)
+        assert record.id == "file_1"
+        assert record.url == "https://cdn.example.com/file_1.png"
+        assert record.content_type == "image/png"
+        assert record.size == 1024
+
+    def test_upload_sends_multipart(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(json={"id": "file_2", "url": "https://cdn.example.com/file_2.png"})
+        client.storage.upload(file=("photo.png", b"\x89PNG", "image/png"))
+        req = httpx_mock.get_requests()[0]
+        assert req.method == "POST"
+        assert "/storage/upload" in str(req.url)
+        content_type = req.headers.get("content-type", "")
+        assert "multipart/form-data" in content_type
+
+    def test_upload_with_template_id(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(json={"id": "file_3", "url": "https://cdn.example.com/file_3.png"})
+        client.storage.upload(file=("img.png", b"\x89PNG", "image/png"), template_id="tmpl_abc")
+        req = httpx_mock.get_requests()[0]
+        body = req.content.decode("utf-8", errors="replace")
+        assert "tmpl_abc" in body
+
+    def test_get_returns_file_record(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(json={"id": "file_1", "url": "https://cdn.example.com/file_1.png"})
+        record = client.storage.get("file_1")
+        assert isinstance(record, FileRecord)
+        assert record.id == "file_1"
+
+    def test_delete_returns_none(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(status_code=204)
+        result = client.storage.delete("file_1")
+        assert result is None
+
+    def test_template_assets_returns_list(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(json=[{"id": "file_1", "url": "https://cdn.example.com/a.png"}, {"id": "file_2", "url": "https://cdn.example.com/b.png"}])
+        assets = client.storage.template_assets("tmpl_abc")
+        assert isinstance(assets, list)
+        assert len(assets) == 2
+        assert all(isinstance(a, FileRecord) for a in assets)
+
+    def test_upload_template_asset(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(json={"id": "file_4", "url": "https://cdn.example.com/asset.png"})
+        record = client.storage.upload_template_asset("tmpl_abc", file=("asset.png", b"\x89PNG", "image/png"))
+        assert isinstance(record, FileRecord)
+        assert record.id == "file_4"
+        req = httpx_mock.get_requests()[0]
+        assert "/storage/template/tmpl_abc" in str(req.url)
+
+
+# ── User-Agent Header ──────────────────────────────────────
+
+
+class TestUserAgent:
+    def test_user_agent_contains_version(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
+        httpx_mock.add_response(json={"id": "w_1", "email": "a@b.com"})
+        client.wallets.me()
+        req = httpx_mock.get_requests()[0]
+        assert req.headers.get("user-agent") == "dual-sdk-python/0.1.0"

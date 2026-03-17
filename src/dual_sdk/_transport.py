@@ -93,8 +93,6 @@ def _prepare_request_kwargs(
         kwargs["files"] = files
         if data is not None:
             kwargs["data"] = data
-        # Override the default JSON Content-Type so httpx can set multipart.
-        kwargs["headers"] = {"Content-Type": None}  # type: ignore[dict-item]
     elif json is not None:
         kwargs["json"] = json
     elif data is not None:
@@ -136,7 +134,7 @@ class Transport:
 
         default_headers: dict[str, str] = {
             "Accept": "application/json",
-            "User-Agent": "dual-sdk-python/1.0.0",
+            "User-Agent": "dual-sdk-python/0.1.0",
         }
         default_headers.update(_build_auth_headers(api_key, auth_mode))
         if headers:
@@ -232,7 +230,7 @@ class AsyncTransport:
 
         default_headers: dict[str, str] = {
             "Accept": "application/json",
-            "User-Agent": "dual-sdk-python/1.0.0",
+            "User-Agent": "dual-sdk-python/0.1.0",
         }
         default_headers.update(_build_auth_headers(api_key, auth_mode))
         if headers:
