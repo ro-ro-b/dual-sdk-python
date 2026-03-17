@@ -25,13 +25,22 @@ class _BaseModel(BaseModel):
 class PaginatedResponse(_BaseModel, Generic[T]):
     """Cursor-based paginated response wrapper.
 
+    The API returns ``"next"`` in JSON; the SDK exposes it as ``.cursor``.
+    Both names are accepted when constructing the model (``populate_by_name=True``).
+
     Attributes:
         items: List of result objects.
         cursor: Opaque cursor for the next page, or ``None`` if this is the last page.
+               Aliased from the ``"next"`` key in the API JSON response.
     """
 
     items: list[T] = Field(default_factory=list)
     cursor: str | None = Field(default=None, alias="next")
+
+    @property
+    def next(self) -> str | None:
+        """Alias for ``cursor`` — matches the raw API field name."""
+        return self.cursor
 
 
 # ── Auth ────────────────────────────────────────────────────

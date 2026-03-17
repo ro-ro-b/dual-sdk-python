@@ -125,11 +125,13 @@ class TestTemplates:
         assert isinstance(result.items[0], Template)
         assert result.items[0].id == "t_1"
         assert result.cursor == "cursor_abc"
+        assert result.next == "cursor_abc"  # .next property aliases .cursor
 
     def test_list_none_cursor(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
         httpx_mock.add_response(json={"items": [{"id": "t_1", "name": "T1"}], "next": None})
         result = client.templates.list()
         assert result.cursor is None
+        assert result.next is None
 
     def test_create_returns_template(self, httpx_mock: HTTPXMock, client: DualClient) -> None:
         httpx_mock.add_response(json={"id": "t_new", "name": "Test Template"})
