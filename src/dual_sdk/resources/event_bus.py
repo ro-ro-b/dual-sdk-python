@@ -11,15 +11,13 @@ from dual_sdk.models import Action, ActionType, PaginatedResponse
 class EventBus(SyncResource):
     """Synchronous event bus client (8 endpoints)."""
 
-    def execute(
-        self, *, action_type: str, payload: dict[str, Any] | None = None, **fields: Any
-    ) -> Action:
+    def execute(self, *, action: dict[str, Any]) -> Action:
         """Execute a single action."""
         return _parse(
             Action,
             self._post(
-                "/ebus/actions",
-                json={"action_type": action_type, "payload": payload or {}, **fields},
+                "/ebus/execute",
+                json={"action": action},
             ),
         )
 
@@ -27,12 +25,12 @@ class EventBus(SyncResource):
         self, *, limit: int = 20, next: str | None = None
     ) -> PaginatedResponse[Action]:
         """List executed actions with cursor pagination."""
-        data = self._get("/ebus/actions", params={"limit": limit, "next": next})
+        data = self._get("/ebus/action-logs", params={"limit": limit, "next": next})
         return _parse(PaginatedResponse[Action], data)
 
     def get_action(self, action_id: str) -> Action:
         """Get an action by ID."""
-        return _parse(Action, self._get(f"/ebus/actions/{action_id}"))
+        return _parse(Action, self._get(f"/ebus/action-logs/{action_id}"))
 
     def execute_batch(self, actions: list[dict[str, Any]]) -> list[Action]:
         """Execute multiple actions in a batch."""
@@ -71,25 +69,23 @@ class EventBus(SyncResource):
 class AsyncEventBus(AsyncResource):
     """Asynchronous event bus client (8 endpoints)."""
 
-    async def execute(
-        self, *, action_type: str, payload: dict[str, Any] | None = None, **fields: Any
-    ) -> Action:
+    async def execute(self, *, action: dict[str, Any]) -> Action:
         return _parse(
             Action,
             await self._post(
-                "/ebus/actions",
-                json={"action_type": action_type, "payload": payload or {}, **fields},
+                "/ebus/execute",
+                json={"action": action},
             ),
         )
 
     async def list_actions(
         self, *, limit: int = 20, next: str | None = None
     ) -> PaginatedResponse[Action]:
-        data = await self._get("/ebus/actions", params={"limit": limit, "next": next})
+        data = await self._get("/ebus/action-logs", params={"limit": limit, "next": next})
         return _parse(PaginatedResponse[Action], data)
 
     async def get_action(self, action_id: str) -> Action:
-        return _parse(Action, await self._get(f"/ebus/actions/{action_id}"))
+        return _parse(Action, await self._get(f"/ebus/action-logs/{action_id}"))
 
     async def execute_batch(self, actions: list[dict[str, Any]]) -> list[Action]:
         data = await self._post("/ebus/actions/batch", json={"actions": actions})

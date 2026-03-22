@@ -36,7 +36,7 @@ from dual_sdk.resources import (
     Webhooks,
 )
 
-_DEFAULT_BASE_URL = "https://blockv-labs.io"
+_DEFAULT_BASE_URL = "https://gateway-48587430648.europe-west6.run.app"
 
 
 class DualClient:
@@ -61,7 +61,7 @@ class DualClient:
         api_key: Your DUAL API key or JWT token.
         auth_mode: How credentials are sent — ``API_KEY`` (default),
             ``BEARER``, or ``BOTH``. See :class:`AuthMode`.
-        base_url: API base URL (default: ``https://blockv-labs.io``).
+        base_url: API base URL (default: ``https://gateway-48587430648.europe-west6.run.app``).
         timeout: Request timeout in seconds (default: 30).
         max_retries: Maximum retry attempts for transient errors (default: 3).
         backoff: Base backoff delay in seconds between retries (default: 1.0).
@@ -137,7 +137,7 @@ class AsyncDualClient:
         api_key: Your DUAL API key or JWT token.
         auth_mode: How credentials are sent — ``API_KEY`` (default),
             ``BEARER``, or ``BOTH``. See :class:`AuthMode`.
-        base_url: API base URL (default: ``https://blockv-labs.io``).
+        base_url: API base URL (default: ``https://gateway-48587430648.europe-west6.run.app``).
         timeout: Request timeout in seconds (default: 30).
         max_retries: Maximum retry attempts for transient errors (default: 3).
         backoff: Base backoff delay in seconds between retries (default: 1.0).

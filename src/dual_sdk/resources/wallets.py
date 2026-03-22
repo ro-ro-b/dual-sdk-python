@@ -11,10 +11,17 @@ from dual_sdk.models import StatusResult, TokenPair, Wallet
 class Wallets(SyncResource):
     """Synchronous wallets client (14 endpoints)."""
 
-    def login(self, email: str, password: str) -> TokenPair:
-        """Authenticate with email and password. Returns access + refresh tokens."""
-        data = self._post("/wallets/login", json={"email": email, "password": password})
-        return _parse(TokenPair, data)
+    def request_otp(self, email: str) -> None:
+        """Request a one-time password sent to the given email."""
+        self._post("/auth/otp", json={"email": email})
+
+    def login_with_otp(self, email: str, otp: str) -> TokenPair:
+        """Login with email and OTP code. Returns system-scoped JWT."""
+        return _parse(TokenPair, self._post("/auth/login", json={"email": email, "otp": otp}))
+
+    def switch_organization(self, org_id: str) -> TokenPair:
+        """Switch to organization context. Returns org-scoped JWT."""
+        return _parse(TokenPair, self._post("/organizations/switch", json={"id": org_id}))
 
     def guest_login(self) -> TokenPair:
         """Create a guest session."""
@@ -96,17 +103,24 @@ class Wallets(SyncResource):
     def refresh_token(self, refresh_token: str) -> TokenPair:
         """Refresh the access token."""
         return _parse(
-            TokenPair, self._post("/wallets/token/refresh", json={"refresh_token": refresh_token})
+            TokenPair, self._post("/auth/refresh-token", json={"refresh_token": refresh_token})
         )
 
 
 class AsyncWallets(AsyncResource):
     """Asynchronous wallets client (14 endpoints)."""
 
-    async def login(self, email: str, password: str) -> TokenPair:
-        """Authenticate with email and password. Returns access + refresh tokens."""
-        data = await self._post("/wallets/login", json={"email": email, "password": password})
-        return _parse(TokenPair, data)
+    async def request_otp(self, email: str) -> None:
+        """Request a one-time password sent to the given email."""
+        await self._post("/auth/otp", json={"email": email})
+
+    async def login_with_otp(self, email: str, otp: str) -> TokenPair:
+        """Login with email and OTP code. Returns system-scoped JWT."""
+        return _parse(TokenPair, await self._post("/auth/login", json={"email": email, "otp": otp}))
+
+    async def switch_organization(self, org_id: str) -> TokenPair:
+        """Switch to organization context. Returns org-scoped JWT."""
+        return _parse(TokenPair, await self._post("/organizations/switch", json={"id": org_id}))
 
     async def guest_login(self) -> TokenPair:
         """Create a guest session."""
@@ -192,5 +206,5 @@ class AsyncWallets(AsyncResource):
         """Refresh the access token."""
         return _parse(
             TokenPair,
-            await self._post("/wallets/token/refresh", json={"refresh_token": refresh_token}),
+            await self._post("/auth/refresh-token", json={"refresh_token": refresh_token}),
         )

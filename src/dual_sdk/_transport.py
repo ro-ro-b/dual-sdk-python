@@ -17,7 +17,7 @@ from dual_sdk.errors import (
     DualRateLimitError,
 )
 
-_DEFAULT_BASE_URL = "https://blockv-labs.io"
+_DEFAULT_BASE_URL = "https://gateway-48587430648.europe-west6.run.app"
 _DEFAULT_TIMEOUT = 30.0
 _DEFAULT_MAX_RETRIES = 3
 _DEFAULT_BACKOFF = 1.0

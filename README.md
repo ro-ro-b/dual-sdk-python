@@ -54,7 +54,7 @@ asyncio.run(main())
 ```python
 client = DualClient(
     api_key=os.environ["DUAL_API_KEY"],
-    base_url="https://blockv-labs.io",  # default
+    base_url="https://gateway-48587430648.europe-west6.run.app",  # default
     timeout=10.0,       # seconds
     max_retries=3,      # retry on 429/5xx
     backoff=1.0,        # exponential backoff base
@@ -80,7 +80,7 @@ except DualError as e:
 
 | Module | Methods | Description |
 |--------|---------|-------------|
-| `client.wallets` | 14 | Login, registration, profile, token refresh |
+| `client.wallets` | 14 | OTP auth, registration, profile, token refresh, organization switching |
 | `client.templates` | 7 | CRUD operations, search, variations |
 | `client.objects` | 9 | Create, list, search, state management |
 | `client.organizations` | 18 | Org management, members, roles, invitations |
